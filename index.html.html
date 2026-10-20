@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DLAPMEL - Gestão de Vendas de Mel e Outros Produtos</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fdf6ec; padding: 15px; margin: 0; color: #333; }
+        .container { max-width: 680px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h2 { color: #bc6c25; text-align: center; margin-top: 0; }
+        
+        .tab-menu { display: flex; border-bottom: 2px solid #dda15e; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 12px; text-align: center; background: #fefae0; border: none; font-weight: bold; color: #283618; cursor: pointer; border-radius: 8px 8px 0 0; font-size: 14px; }
+        .tab-btn.active { background: #dda15e; color: white; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .form-group { margin-bottom: 20px; }
+        label { font-weight: bold; display: block; margin-bottom: 8px; color: #283618; font-size: 14px; }
+        
+        .row-group { display: flex; gap: 15px; margin-bottom: 20px; }
+        .row-group .form-group { flex: 1; margin-bottom: 0; }
+
+        .button-group { display: flex; flex-wrap: wrap; gap: 8px; }
+        .option-btn {
+            flex: 1;
+            min-width: 28%;
+            padding: 12px;
+            border: 2px solid #dda15e;
+            background-color: #fff;
+            color: #283618;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            font-weight: 500;
+        }
+        .option-btn.active {
+            background-color: #dda15e;
+            color: white;
+            border-color: #bc6c25;
+            font-weight: bold;
+        }
+        
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            box-sizing: border-box;
+            border: 2px solid #bc6c25;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            background: #fffdf9;
+        }
+        
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            height: 45px;
+            width: 35px;
+            cursor: pointer;
+        }
+
+        .action-btn {
+            background-color: #dda15e;
+            color: #283618;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+        .action-btn:hover { background-color: #bc6c25; color: white; }
+
+        .submit-btn {
+            background-color: #283618;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            margin-top: 15px;
+        }
+        .submit-btn:hover { background-color: #386641; }
+
+        .summary-card { background: #fefae0; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; border-left: 5px solid #bc6c25; }
+        .summary-card h4 { margin: 0 0 8px 0; color: #606c38; font-size: 14px; }
+        .summary-card p { margin: 0; font-size: 16px; font-weight: bold; color: #283618; }
+        
+        .price-table, .matrix-summary-table, .payment-summary-table, .cart-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px; }
+        .price-table th, .price-table td, .matrix-summary-table th, .matrix-summary-table td, .payment-summary-table th, .payment-summary-table td, .cart-table th, .cart-table td { border: 1px solid #dda15e; padding: 10px 6px; text-align: center; }
+        .price-table th, .matrix-summary-table th, .payment-summary-table th, .cart-table th { background: #fefae0; color: #283618; }
+        .price-table td:first-child, .cart-table td:first-child { text-align: left; font-weight: bold; }
+        
+        .price-table input { width: 75px; padding: 8px; font-size: 14px; text-align: right; border: 2px solid #bc6c25; border-radius: 6px; font-weight: bold; }
+        
+        .history-list { font-size: 13px; color: #555; max-height: 150px; overflow-y: auto; margin-top: 5px; }
+        .history-item { padding: 6px 0; border-bottom: 1px solid #eee; }
+        
+        .section-divider { margin: 15px 0 10px 0; font-size: 13px; font-weight: bold; color: #bc6c25; border-bottom: 1px dashed #dda15e; padding-bottom: 4px; }
+        .cart-container { background: #fffaf0; border: 2px dashed #dda15e; padding: 15px; border-radius: 10px; margin-top: 20px; }
+        .remove-btn { background: #bc6c25; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .container { max-width: 100%; box-shadow: none; padding: 0; }
+            .tab-menu, .submit-btn, .action-btn, form, .cart-container, #inicioTab, #vendasTab, #precosTab { display: none !important; }
+            #resumoTab { display: block !important; }
+            .summary-card { border: 1px solid #ddd; break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Cabeçalho -->
+    <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #dda15e; padding-bottom: 12px;">
+        <h2 style="margin: 0; color: #bc6c25; font-size: 24px;">DLAPMEL - Gestão de Vendas</h2>
+    </div>
+
+    <!-- Navegação por Abas -->
+    <div class="tab-menu">
+        <button class="tab-btn active" onclick="mudarAba('inicioTab', this)">🏠 Início</button>
+        <button class="tab-btn" onclick="mudarAba('vendasTab', this)">🛒 Vendas</button>
+        <button class="tab-btn" onclick="mudarAba('precosTab', this)">🏷️ Tabela de Preços</button>
+        <button class="tab-btn" onclick="mudarAba('resumoTab', this)">📊 Resumo</button>
+    </div>
+
+    <!-- ABA 0: INÍCIO / DADOS DO EVENTO -->
+    <div id="inicioTab" class="tab-content active">
+        <h3>🏠 Informações do Evento e Local</h3>
+        <p style="font-size:12px; color:#666;">Defina os dados do evento atual. É obrigatório preencher o nome e o local para avançar.</p>
+        
+        <div class="form-group">
+            <label for="dataEvento">Data(s) do Evento:</label>
+            <input type="text" id="dataEvento" placeholder="Ex: 21 a 23 de Outubro de 2026">
+        </div>
+
+        <div class="form-group">
+            <label for="nomeEvento">Nome do Evento:</label>
+            <input type="text" id="nomeEvento" placeholder="Introduza o nome do evento...">
+        </div>
+
+        <div class="form-group">
+            <label for="localEvento">Local do Evento:</label>
+            <input type="text" id="localEvento" placeholder="Introduza o local do evento...">
+        </div>
+
+        <button type="button" class="submit-btn" onclick="if(guardarDadosEvento()) { mudarAba('vendasTab', document.querySelectorAll('.tab-btn')[1]); }">💾 Guardar e Avançar para Vendas</button>
+    </div>
+
+    <!-- ABA 1: REGISTO DE VENDAS -->
+    <div id="vendasTab" class="tab-content">
+        <form id="itemForm" onsubmit="event.preventDefault(); adicionarAoCarrinho();">
+            <div class="form-group">
+                <label>Tipo de Mel:</label>
+                <div class="button-group">
+                    <button type="button" class="option-btn active" onclick="selecionarMel('Multifloral', this)">Multifloral</button>
+                    <button type="button" class="option-btn" onclick="selecionarMel('Rosmaninho', this)">Rosmaninho</button>
+                    <button type="button" class="option-btn" onclick="selecionarMel('Eucalipto', this)">Eucalipto</button>
+                    <button type="button" class="option-btn" onclick="selecionarMel('Laranjeiro', this)">Laranjeiro</button>
+                    <button type="button" class="option-btn" onclick="selecionarMel('Castanheiro', this)">Castanheiro</button>
+                    <button type="button" class="option-btn" onclick="selecionarMel('Urze', this)">Urze</button>
+                </div>
+            </div>
+
+            <div class="form-group" id="tamanhoMelGroup">
+                <label>Tamanho do Frasco (Mel):</label>
+                <div class="button-group">
+                    <button type="button" class="option-btn active" onclick="selecionarTamanhoMel('250g', this)">250g</button>
+                    <button type="button" class="option-btn" onclick="selecionarTamanhoMel('500g', this)">500g</button>
+                    <button type="button" class="option-btn" onclick="selecionarTamanhoMel('1kg', this)">1kg</button>
+                </div>
+            </div>
+
+            <div class="section-divider">Outros Produtos</div>
+
+            <div class="form-group">
+                <label>Selecionar Produto Adicional:</label>
+                <div class="button-group">
+                    <button type="button" class="option-btn" onclick="selecionarOutroProduto('Pólen 110g', this)">Pólen 110g</button>
+                    <button type="button" class="option-btn" onclick="selecionarOutroProduto('Pólen 220g', this)">Pólen 220g</button>
+                    <button type="button" class="option-btn" onclick="selecionarOutroProduto('Pólen 440g', this)">Pólen 440g</button>
+                    <button type="button" class="option-btn" onclick="selecionarOutroProduto('Própolis 30mg', this)">Própolis 30mg</button>
+                    <button type="button" class="option-btn" onclick="selecionarOutroProduto('Cocktail', this)">Cocktail</button>
+                    <button type="button" class="option-btn" onclick="selecionarOutroProduto('Outros', this)">Outros</button>
+                </div>
+            </div>
+
+            <input type="hidden" id="tipoProduto" value="Mel">
+            <input type="hidden" id="detalheProduto" value="Multifloral - 250g">
+
+            <div class="row-group">
+                <div class="form-group">
+                    <label for="precoUnitario">Preço Unitário (€):</label>
+                    <input type="number" id="precoUnitario" value="4.5" step="0.5" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="quantidade">Quantidade:</label>
+                    <input type="number" id="quantidade" value="1" min="1" step="1">
+                </div>
+            </div>
+
+            <button type="submit" class="action-btn">➕ Adicionar à Pré-Venda</button>
+        </form>
+
+        <div class="cart-container">
+            <h3 style="margin-top:0; color:#bc6c25; font-size:16px;">🛒 Lista de Produtos na Venda Atual</h3>
+            <div style="overflow-x:auto;">
+                <table class="cart-table">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Qtd</th>
+                            <th>P. Unit</th>
+                            <th>Subtotal</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cartBody">
+                        <tr><td colspan="5" style="color:#777; text-align:center;">Nenhum produto adicionado ainda.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="text-align:right; font-size:16px; font-weight:bold; margin-bottom:15px; color:#283618;">
+                Total da Pré-Venda: <span id="cartTotal">0,0 €</span>
+            </div>
+
+            <div class="form-group" style="margin-bottom:15px;">
+                <label>Método de Pagamento:</label>
+                <div class="button-group">
+                    <button type="button" class="option-btn active" onclick="selecionarOpcaoPagamento('Dinheiro', this)">Dinheiro</button>
+                    <button type="button" class="option-btn" onclick="selecionarOpcaoPagamento('MB Way', this)">MB Way</button>
+                    <button type="button" class="option-btn" onclick="selecionarOpcaoPagamento('Cartão', this)">Cartão</button>
+                    <button type="button" class="option-btn" onclick="selecionarOpcaoPagamento('Transferência', this)">Transferência</button>
+                </div>
+                <input type="hidden" id="pagamento" value="Dinheiro">
+            </div>
+
+            <button type="button" class="submit-btn" onclick="registarVendaFinal()">✅ Registar Venda Final</button>
+        </div>
+    </div>
+
+    <!-- ABA 2: TABELA DE PREÇOS -->
+    <div id="precosTab" class="tab-content">
+        <h3>🏷️ Tabela de Preços</h3>
+        <p style="font-size:12px; color:#666;">Define aqui os preços unitários (€) para mel e demais produtos (incrementos de 0,5 €):</p>
+        
+        <h4>Mel (por Tipo e Tamanho)</h4>
+        <table class="price-table">
+            <thead>
+                <tr>
+                    <th>Tipo de Mel</th>
+                    <th>250g</th>
+                    <th>500g</th>
+                    <th>1kg</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaPrecosMelBody"></tbody>
+        </table>
+
+        <h4>Outros Produtos</h4>
+        <table class="price-table">
+            <thead>
+                <tr>
+                    <th>Produto</th>
+                    <th>Preço Unitário (€)</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaPrecosOutrosBody"></tbody>
+        </table>
+
+        <button type="button" class="submit-btn" onclick="guardarPrecosDiscriminados(); alert('Tabela de preços guardada com sucesso!');">Guardar Tabela de Preços</button>
+    </div>
+
+    <!-- ABA 3: RESUMO DE VENDAS -->
+    <div id="resumoTab" class="tab-content">
+        <h3>📊 Resumo de Vendas</h3>
+
+        <div class="summary-card" style="background: #283618; color: white; border-left: 5px solid #dda15e; text-align: center; cursor: pointer;" onclick="exportarResumoPDF()">
+            <h4 style="color: #fefae0; margin-bottom: 5px;">📄 Exportar / Guardar Resumo em PDF</h4>
+            <p style="color: #fff; font-size: 14px; font-weight: normal;">Clique aqui para imprimir ou guardar o resumo e histórico em formato PDF</p>
+        </div>
+
+        <!-- Cabeçalho do Evento no Resumo (visível na exportação/impressão) -->
+        <div class="summary-card" style="background: #fefae0; border-left: 5px solid #bc6c25;">
+            <h4>📋 Dados do Evento</h4>
+            <p id="resumoEventoNome" style="margin-bottom: 4px; font-size: 15px; color: #283618;"><b>Evento:</b> -</p>
+            <p id="resumoEventoLocal" style="margin-bottom: 4px; font-size: 15px; color: #283618;"><b>Local:</b> -</p>
+            <p id="resumoEventoData" style="margin: 0; font-size: 14px; color: #555; font-weight: normal;"><b>Data:</b> -</p>
+        </div>
+
+        <div class="summary-card">
+            <h4>Faturação Total</h4>
+            <p id="totalFaturado">0,0 €</p>
+        </div>
+        
+        <div class="summary-card">
+            <h4>Vendas de Mel (Tipo vs Tamanho)</h4>
+            <div style="overflow-x:auto;">
+                <table class="matrix-summary-table" id="matrixResumoTable">
+                    <thead>
+                        <tr>
+                            <th>Tipo de Mel</th>
+                            <th>250g</th>
+                            <th>500g</th>
+                            <th>1kg</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matrixResumoBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <h4>Vendas de Outros Produtos</h4>
+            <div style="overflow-x:auto;">
+                <table class="matrix-summary-table" id="outrosResumoTable">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Quantidade Total</th>
+                            <th>Total (€)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="outrosResumoBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <h4>Por Método de Pagamento</h4>
+            <div style="overflow-x:auto;">
+                <table class="payment-summary-table" id="paymentResumoTable">
+                    <thead>
+                        <tr>
+                            <th>Método</th>
+                            <th>Dinheiro</th>
+                            <th>MB Way</th>
+                            <th>Cartão</th>
+                            <th>Transferência</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>Total (€)</b></td>
+                            <td id="pag_Dinheiro">0,0 €</td>
+                            <td id="pag_MBWay">0,0 €</td>
+                            <td id="pag_Cartao">0,0 €</td>
+                            <td id="pag_Transferencia">0,0 €</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <h4>Histórico de Registos</h4>
+            <div id="historicoVendas" class="history-list">Nenhuma venda registada.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const tiposMel = ['Multifloral', 'Rosmaninho', 'Eucalipto', 'Laranjeiro', 'Castanheiro', 'Urze'];
+    const tamanhosMel = ['250g', '500g', '1kg'];
+    const outrosProdutos = ['Pólen 110g', 'Pólen 220g', 'Pólen 440g', 'Própolis 30mg', 'Cocktail', 'Outros'];
+
+    const precosMelPadrao = {
+        'Multifloral': { '250g': 4.5, '500g': 6.0, '1kg': 10.0 },
+        'Rosmaninho':  { '250g': 4.5, '500g': 6.0, '1kg': 11.0 },
+        'Eucalipto':   { '250g': 4.5, '500g': 6.0, '1kg': 11.0 },
+        'Laranjeiro':  { '250g': 4.5, '500g': 6.0, '1kg': 12.0 },
+        'Castanheiro': { '250g': 4.5, '500g': 6.0, '1kg': 12.0 },
+        'Urze':        { '250g': 4.5, '500g': 6.0, '1kg': 12.0 }
+    };
+
+    const precosOutrosPadrao = {
+        'Pólen 110g': 5.0,
+        'Pólen 220g': 8.0,
+        'Pólen 440g': 15.0,
+        'Própolis 30mg': 11.0,
+        'Cocktail': 6.0,
+        'Outros': 0.0
+    };
+
+    let precosMel = JSON.parse(localStorage.getItem('precos_mel_v14') || JSON.stringify(precosMelPadrao));
+    let precosOutros = JSON.parse(localStorage.getItem('precos_outros_v14') || JSON.stringify(precosOutrosPadrao));
+    let vendas = JSON.parse(localStorage.getItem('vendas_mel_v14') || '[]');
+    let carrinho = [];
+
+    let estadoAtual = {
+        tipoProduto: 'Mel',
+        melTipo: 'Multifloral',
+        melTamanho: '250g',
+        outroItem: null,
+        pagamento: 'Dinheiro'
+    };
+
+    function formatarEuro1Casa(valor) {
+        return valor.toFixed(1).replace('.', ',') + ' €';
+    }
+
+    function renderizarTabelaPrecos() {
+        const tbodyMel = document.getElementById('tabelaPrecosMelBody');
+        tbodyMel.innerHTML = '';
+        tiposMel.forEach(tipo => {
+            let tr = document.createElement('tr');
+            let html = `<td>${tipo}</td>`;
+            tamanhosMel.forEach(tam => {
+                let val = (precosMel[tipo] && precosMel[tipo][tam] !== undefined) ? precosMel[tipo][tam] : 0;
+                html += `<td><input type="number" id="pmel_${tipo}_${tam}" value="${val.toFixed(1)}" step="0.5" min="0"></td>`;
+            });
+            tr.innerHTML = html;
+            tbodyMel.appendChild(tr);
+        });
+
+        const tbodyOutros = document.getElementById('tabelaPrecosOutrosBody');
+        tbodyOutros.innerHTML = '';
+        outrosProdutos.forEach(prod => {
+            let val = precosOutros[prod] !== undefined ? precosOutros[prod] : 0;
+            let tr = document.createElement('tr');
+            tr.innerHTML = `<td>${prod}</td><td><input type="number" id="poutro_${prod}" value="${val.toFixed(1)}" step="0.5" min="0"></td>`;
+            tbodyOutros.appendChild(tr);
+        });
+    }
+
+    function guardarPrecosDiscriminados() {
+        tiposMel.forEach(tipo => {
+            if (!precosMel[tipo]) precosMel[tipo] = {};
+            tamanhosMel.forEach(tam => {
+                let val = parseFloat(document.getElementById(`pmel_${tipo}_${tam}`).value) || 0;
+                precosMel[tipo][tam] = val;
+            });
+        });
+
+        outrosProdutos.forEach(prod => {
+            let val = parseFloat(document.getElementById(`poutro_${prod}`).value) || 0;
+            precosOutros[prod] = val;
+        });
+
+        localStorage.setItem('precos_mel_v14', JSON.stringify(precosMel));
+        localStorage.setItem('precos_outros_v14', JSON.stringify(precosOutros));
+        atualizarPrecoVenda();
+    }
+
+    function mudarAba(abaId, elemento) {
+        if (abaId !== 'inicioTab') {
+            const nome = document.getElementById('nomeEvento').value.trim();
+            const local = document.getElementById('localEvento').value.trim();
+            if (!nome || !local) {
+                alert('⚠️ Por favor, preencha o Nome do Evento e o Local do Evento na aba Início antes de avançar.');
+                mudarAba('inicioTab', document.querySelector('.tab-btn'));
+                return;
+            }
+        }
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(tb => tb.classList.remove('active'));
+        document.getElementById(abaId).classList.add('active');
+        if (elemento) elemento.classList.add('active');
+        
+        if (abaId === 'resumoTab') {
+            atualizarResumo();
+        }
+    }
+
+    function selecionarMel(tipo, elemento) {
+        estadoAtual.tipoProduto = 'Mel';
+        estadoAtual.melTipo = tipo;
+        estadoAtual.outroItem = null;
+
+        document.querySelectorAll('#vendasTab .section-divider + .form-group .option-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tamanhoMelGroup').style.display = 'block';
+
+        const grupo = elemento.parentElement;
+        for (let b of grupo.getElementsByClassName('option-btn')) { b.classList.remove('active'); }
+        elemento.classList.add('active');
+
+        atualizarPrecoVenda();
+    }
+
+    function selecionarTamanhoMel(tamanho, elemento) {
+        estadoAtual.melTamanho = tamanho;
+        const grupo = elemento.parentElement;
+        for (let b of grupo.getElementsByClassName('option-btn')) { b.classList.remove('active'); }
+        elemento.classList.add('active');
+
+        atualizarPrecoVenda();
+    }
+
+    function selecionarOutroProduto(produto, elemento) {
+        estadoAtual.tipoProduto = 'Outro';
+        estadoAtual.outroItem = produto;
+        
+        document.querySelectorAll('#vendasTab .form-group:nth-child(1) .option-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tamanhoMelGroup').style.display = 'none';
+
+        const grupo = elemento.parentElement;
+        for (let b of grupo.getElementsByClassName('option-btn')) { b.classList.remove('active'); }
+        elemento.classList.add('active');
+
+        atualizarPrecoVenda();
+    }
+
+    function selecionarOpcaoPagamento(valor, elemento) {
+        estadoAtual.pagamento = valor;
+        const grupo = elemento.parentElement;
+        for (let b of grupo.getElementsByClassName('option-btn')) { b.classList.remove('active'); }
+        elemento.classList.add('active');
+        document.getElementById('pagamento').value = valor;
+    }
+
+    function atualizarPrecoVenda() {
+        let preco = 0;
+        if (estadoAtual.tipoProduto === 'Mel') {
+            preco = (precosMel[estadoAtual.melTipo] && precosMel[estadoAtual.melTamanho] !== undefined) ? precosMel[estadoAtual.melTamanho] : 4.5;
+            document.getElementById('detalheProduto').value = `${estadoAtual.melTipo} - ${estadoAtual.melTamanho}`;
+        } else {
+            preco = precosOutros[estadoAtual.outroItem] !== undefined ? precosOutros[estadoAtual.outroItem] : 0.0;
+            document.getElementById('detalheProduto').value = estadoAtual.outroItem;
+        }
+        document.getElementById('precoUnitario').value = preco.toFixed(1);
+    }
+
+    function adicionarAoCarrinho() {
+        const quantidade = parseInt(document.getElementById('quantidade').value) || 1;
+        const precoUnitario = parseFloat(document.getElementById('precoUnitario').value) || 0;
+        const tipoProduto = estadoAtual.tipoProduto;
+        const nomeProduto = document.getElementById('detalheProduto').value;
+        const subtotal = quantidade * precoUnitario;
+
+        carrinho.push({
+            tipoProduto,
+            nomeProduto,
+            melTipo: estadoAtual.tipoProduto === 'Mel' ? estadoAtual.melTipo : null,
+            melTamanho: estadoAtual.tipoProduto === 'Mel' ? estadoAtual.melTamanho : null,
+            quantidade,
+            precoUnitario,
+            subtotal
+        });
+
+        renderizarCarrinho();
+        document.getElementById('quantidade').value = 1;
+    }
+
+    function removerDoCarrinho(index) {
+        carrinho.splice(index, 1);
+        renderizarCarrinho();
+    }
+
+    function renderizarCarrinho() {
+        const cartBody = document.getElementById('cartBody');
+        cartBody.innerHTML = '';
+        let totalCarrinho = 0;
+
+        if (carrinho.length === 0) {
+            cartBody.innerHTML = `<tr><td colspan="5" style="color:#777; text-align:center;">Nenhum produto adicionado ainda.</td></tr>`;
+            document.getElementById('cartTotal').innerText = '0,0 €';
+            return;
+        }
+
+        carrinho.forEach((item, index) => {
+            totalCarrinho += item.subtotal;
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><b>${item.nomeProduto}</b></td>
+                <td>${item.quantidade}</td>
+                <td>${formatarEuro1Casa(item.precoUnitario)}</td>
+                <td><b>${formatarEuro1Casa(item.subtotal)}</b></td>
+                <td><button type="button" class="remove-btn" onclick="removerDoCarrinho(${index})">❌</button></td>
+            `;
+            cartBody.appendChild(tr);
+        });
+
+        document.getElementById('cartTotal').innerText = formatarEuro1Casa(totalCarrinho);
+    }
+
+    function registarVendaFinal() {
+        if (carrinho.length === 0) {
+            alert('A lista da pré-venda está vazia! Adicione pelo menos um produto.');
+            return;
+        }
+
+        let totalVendaFinal = carrinho.reduce((acc, item) => acc + item.subtotal, 0);
+        let confirmar = confirm(`O valor total desta venda é ${formatarEuro1Casa(totalVendaFinal)}. Deseja registar e concluir a venda?`);
+        
+        if (!confirmar) return;
+
+        const dataHora = new Date().toLocaleString('pt-PT');
+        const pagamento = estadoAtual.pagamento;
+
+        carrinho.forEach(item => {
+            vendas.push({
+                dataHora,
+                tipoProduto: item.tipoProduto,
+                nomeProduto: item.nomeProduto,
+                melTipo: item.melTipo,
+                melTamanho: item.melTamanho,
+                quantidade: item.quantidade,
+                precoUnitario: item.precoUnitario,
+                pagamento,
+                totalVenda: item.subtotal
+            });
+        });
+
+        localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
+        
+        carrinho = [];
+        renderizarCarrinho();
+        atualizarResumo();
+
+        alert('Venda registada com sucesso!');
+    }
+
+    function atualizarResumo() {
+        // Atualizar dados do evento no resumo
+        const nomeEv = document.getElementById('nomeEvento').value || '-';
+        const localEv = document.getElementById('localEvento').value || '-';
+        const dataEv = document.getElementById('dataEvento').value || '-';
+        
+        document.getElementById('resumoEventoNome').innerHTML = '<b>Evento:</b> ' + nomeEv;
+        document.getElementById('resumoEventoLocal').innerHTML = '<b>Local:</b> ' + localEv;
+        document.getElementById('resumoEventoData').innerHTML = '<b>Data:</b> ' + dataEv;
+
+        let faturacaoTotal = 0;
+        let matrizMelQtd = {};
+        tiposMel.forEach(tipo => {
+            matrizMelQtd[tipo] = {};
+            tamanhosMel.forEach(tam => { matrizMelQtd[tipo][tam] = 0; });
+        });
+
+        let vendasOutrosResumo = {};
+        outrosProdutos.forEach(prod => {
+            vendasOutrosResumo[prod] = { qtd: 0, total: 0 };
+        });
+
+        let porPagamento = { 'Dinheiro': 0, 'MB Way': 0, 'Cartão': 0, 'Transferência': 0 };
+        let historicoHtml = '';
+
+        vendas.forEach((v) => {
+            faturacaoTotal += v.totalVenda;
+            if (v.tipoProduto === 'Mel') {
+                if (matrizMelQtd[v.melTipo] && matrizMelQtd[v.melTipo][v.melTamanho] !== undefined) {
+                    matrizMelQtd[v.melTipo][v.melTamanho] += v.quantidade;
+                }
+            } else {
+                if (!vendasOutrosResumo[v.nomeProduto]) {
+                    vendasOutrosResumo[v.nomeProduto] = { qtd: 0, total: 0 };
+                }
+                vendasOutrosResumo[v.nomeProduto].qtd += v.quantidade;
+                vendasOutrosResumo[v.nomeProduto].total += v.totalVenda;
+            }
+
+            if (porPagamento[v.pagamento] !== undefined) {
+                porPagamento[v.pagamento] += v.totalVenda;
+            }
+        });
+
+        const matrixBody = document.getElementById('matrixResumoBody');
+        matrixBody.innerHTML = '';
+        tiposMel.forEach(tipo => {
+            let tr = document.createElement('tr');
+            let html = `<td><b>${tipo}</b></td>`;
+            tamanhosMel.forEach(tam => {
+                let qtd = matrizMelQtd[tipo][tam];
+                html += `<td>${qtd > 0 ? '<b>' + qtd + '</b>' : '-'}</td>`;
+            });
+            tr.innerHTML = html;
+            matrixBody.appendChild(tr);
+        });
+
+        const outrosBody = document.getElementById('outrosResumoBody');
+        outrosBody.innerHTML = '';
+        let temOutrosVendas = false;
+        for (let prod in vendasOutrosResumo) {
+            if (vendasOutrosResumo[prod].qtd > 0) {
+                temOutrosVendas = true;
+                let tr = document.createElement('tr');
+                tr.innerHTML = `<td><b>${prod}</b></td><td><b>${vendasOutrosResumo[prod].qtd}</b></td><td><b>${formatarEuro1Casa(vendasOutrosResumo[prod].total)}</b></td>`;
+                outrosBody.appendChild(tr);
+            }
+        }
+        if (!temOutrosVendas) {
+            outrosBody.innerHTML = `<tr><td colspan="3" style="color:#777; text-align:center;">Nenhum outro produto vendido.</td></tr>`;
+        }
+
+        document.getElementById('pag_Dinheiro').innerText = formatarEuro1Casa(porPagamento['Dinheiro']);
+        document.getElementById('pag_MBWay').innerText = formatarEuro1Casa(porPagamento['MB Way']);
+        document.getElementById('pag_Cartao').innerText = formatarEuro1Casa(porPagamento['Cartão']);
+        document.getElementById('pag_Transferencia').innerText = formatarEuro1Casa(porPagamento['Transferência']);
+
+        for (let i = vendas.length - 1; i >= 0; i--) {
+            let v = vendas[i];
+            let desc = v.tipoProduto === 'Mel' ? `${v.melTipo} (${v.melTamanho})` : v.nomeProduto;
+            historicoHtml += `<div class="history-item"><b>${v.dataHora}</b> - ${v.quantidade}x ${desc} | ${formatarEuro1Casa(v.totalVenda)} (${v.pagamento})</div>`;
+        }
+
+        document.getElementById('totalFaturado').innerText = formatarEuro1Casa(faturacaoTotal);
+        document.getElementById('historicoVendas').innerHTML = historicoHtml || 'Nenhuma venda registada.';
+    }
+
+    function exportarResumoPDF() {
+        mudarAba('resumoTab', document.querySelectorAll('.tab-btn')[3]);
+        window.print();
+    }
+
+    renderizarTabelaPrecos();
+    atualizarPrecoVenda();
+    atualizarResumo();
+
+    let dadosEvento = JSON.parse(localStorage.getItem('dados_evento_v14') || JSON.stringify({
+        data: new Date().toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' }),
+        nome: '',
+        local: ''
+    }));
+
+    function carregarDadosEvento() {
+        document.getElementById('dataEvento').value = dadosEvento.data || '';
+        document.getElementById('nomeEvento').value = dadosEvento.nome || '';
+        document.getElementById('localEvento').value = dadosEvento.local || '';
+        atualizarResumo();
+    }
+
+    function guardarDadosEvento() {
+        const nome = document.getElementById('nomeEvento').value.trim();
+        const local = document.getElementById('localEvento').value.trim();
+        if (!nome || !local) {
+            alert('⚠️ O Nome do Evento e o Local do Evento são obrigatórios para avançar.');
+            return false;
+        }
+        dadosEvento.data = document.getElementById('dataEvento').value;
+        dadosEvento.nome = nome;
+        dadosEvento.local = local;
+        localStorage.setItem('dados_evento_v14', JSON.stringify(dadosEvento));
+        atualizarResumo();
+        alert('Dados do evento guardados com sucesso!');
+        return true;
+    }
+
+    carregarDadosEvento();
+</script>
+
+</body>
+</html>
