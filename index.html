@@ -293,7 +293,7 @@
             <p style="color: #fff; font-size: 14px; font-weight: normal;">Clique aqui para imprimir ou guardar o resumo e histórico em formato PDF</p>
         </div>
 
-        <!-- Cabeçalho do Evento no Resumo (visível na exportação/impressão) -->
+        <!-- Cabeçalho do Evento no Resumo -->
         <div class="summary-card" style="background: #fefae0; border-left: 5px solid #bc6c25;">
             <h4>📋 Dados do Evento</h4>
             <p id="resumoEventoNome" style="margin-bottom: 4px; font-size: 15px; color: #283618;"><b>Evento:</b> -</p>
@@ -455,6 +455,25 @@
         atualizarPrecoVenda();
     }
 
+    function guardarDadosEvento() {
+        const nome = document.getElementById('nomeEvento').value.trim();
+        const local = document.getElementById('localEvento').value.trim();
+        if (!nome || !local) {
+            alert('⚠️ Por favor, preencha o Nome do Evento e o Local do Evento.');
+            return false;
+        }
+        localStorage.setItem('dlapmel_evento_nome', nome);
+        localStorage.setItem('dlapmel_evento_local', local);
+        localStorage.setItem('dlapmel_evento_data', document.getElementById('dataEvento').value.trim());
+        return true;
+    }
+
+    function carregarDadosEvento() {
+        document.getElementById('nomeEvento').value = localStorage.getItem('dlapmel_evento_nome') || '';
+        document.getElementById('localEvento').value = localStorage.getItem('dlapmel_evento_local') || '';
+        document.getElementById('dataEvento').value = localStorage.getItem('dlapmel_evento_data') || '';
+    }
+
     function mudarAba(abaId, elemento) {
         if (abaId !== 'inicioTab') {
             const nome = document.getElementById('nomeEvento').value.trim();
@@ -521,10 +540,15 @@
         document.getElementById('pagamento').value = valor;
     }
 
+    // --- FUNÇÃO CORRIGIDA ---
     function atualizarPrecoVenda() {
         let preco = 0;
         if (estadoAtual.tipoProduto === 'Mel') {
-            preco = (precosMel[estadoAtual.melTipo] && precosMel[estadoAtual.melTamanho] !== undefined) ? precosMel[estadoAtual.melTamanho] : 4.5;
+            if (precosMel[estadoAtual.melTipo] && precosMel[estadoAtual.melTipo][estadoAtual.melTamanho] !== undefined) {
+                preco = precosMel[estadoAtual.melTipo][estadoAtual.melTamanho];
+            } else {
+                preco = 4.5;
+            }
             document.getElementById('detalheProduto').value = `${estadoAtual.melTipo} - ${estadoAtual.melTamanho}`;
         } else {
             preco = precosOutros[estadoAtual.outroItem] !== undefined ? precosOutros[estadoAtual.outroItem] : 0.0;
@@ -623,8 +647,11 @@
         alert('Venda registada com sucesso!');
     }
 
+    function exportarResumoPDF() {
+        window.print();
+    }
+
     function atualizarResumo() {
-        // Atualizar dados do evento no resumo
         const nomeEv = document.getElementById('nomeEvento').value || '-';
         const localEv = document.getElementById('localEvento').value || '-';
         const dataEv = document.getElementById('dataEvento').value || '-';
@@ -710,45 +737,12 @@
         document.getElementById('historicoVendas').innerHTML = historicoHtml || 'Nenhuma venda registada.';
     }
 
-    function exportarResumoPDF() {
-        mudarAba('resumoTab', document.querySelectorAll('.tab-btn')[3]);
-        window.print();
-    }
-
-    renderizarTabelaPrecos();
-    atualizarPrecoVenda();
-    atualizarResumo();
-
-    let dadosEvento = JSON.parse(localStorage.getItem('dados_evento_v14') || JSON.stringify({
-        data: new Date().toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' }),
-        nome: '',
-        local: ''
-    }));
-
-    function carregarDadosEvento() {
-        document.getElementById('dataEvento').value = dadosEvento.data || '';
-        document.getElementById('nomeEvento').value = dadosEvento.nome || '';
-        document.getElementById('localEvento').value = dadosEvento.local || '';
-        atualizarResumo();
-    }
-
-    function guardarDadosEvento() {
-        const nome = document.getElementById('nomeEvento').value.trim();
-        const local = document.getElementById('localEvento').value.trim();
-        if (!nome || !local) {
-            alert('⚠️ O Nome do Evento e o Local do Evento são obrigatórios para avançar.');
-            return false;
-        }
-        dadosEvento.data = document.getElementById('dataEvento').value;
-        dadosEvento.nome = nome;
-        dadosEvento.local = local;
-        localStorage.setItem('dados_evento_v14', JSON.stringify(dadosEvento));
-        atualizarResumo();
-        alert('Dados do evento guardados com sucesso!');
-        return true;
-    }
-
-    carregarDadosEvento();
+    // Inicialização ao carregar a página
+    window.onload = function() {
+        carregarDadosEvento();
+        renderizarTabelaPrecos();
+        atualizarPrecoVenda();
+    };
 </script>
 
 </body>
