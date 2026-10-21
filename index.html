@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -374,10 +375,18 @@
             <p id="resumoEventoData" style="margin: 0; font-size: 13px; color: #555; font-weight: normal;"><b>Data:</b> -</p>
         </div>
 
-        <div class="summary-card">
-            <h4>Faturação Total</h4>
-            <p id="totalFaturado">0,0 €</p>
+        <!-- Faturação Total e Total de Descontos lado a lado -->
+        <div class="row-group">
+            <div class="summary-card" style="flex: 1; margin-bottom: 0;">
+                <h4>Faturação Total</h4>
+                <p id="totalFaturado">0,0 €</p>
+            </div>
+            <div class="summary-card" style="flex: 1; margin-bottom: 0; border-left-color: #dda15e;">
+                <h4>Total Descontos</h4>
+                <p id="totalDescontos" style="color: #bc6c25;">0,0 €</p>
+            </div>
         </div>
+        <div style="margin-bottom: 12px;"></div>
         
         <div class="summary-card">
             <h4>Vendas de Mel (Tipo vs Tamanho)</h4>
@@ -762,6 +771,7 @@
 
         carrinho.forEach(item => {
             let totalItemComDesconto = item.subtotal * fatorDesconto;
+            let descontoItem = item.subtotal - totalItemComDesconto;
             vendas.push({
                 dataHora,
                 tipoProduto: item.tipoProduto,
@@ -770,6 +780,8 @@
                 melTamanho: item.melTamanho,
                 quantidade: item.quantidade,
                 precoUnitario: item.precoUnitario,
+                subtotal: item.subtotal,
+                desconto: descontoItem,
                 pagamento,
                 totalVenda: totalItemComDesconto
             });
@@ -799,6 +811,7 @@
         document.getElementById('resumoEventoData').innerHTML = '<b>Data:</b> ' + dataEv;
 
         let faturacaoTotal = 0;
+        let descontoTotal = 0;
         let matrizMelQtd = {};
         tiposMel.forEach(tipo => {
             matrizMelQtd[tipo] = {};
@@ -815,6 +828,7 @@
 
         vendas.forEach((v) => {
             faturacaoTotal += v.totalVenda;
+            descontoTotal += (v.desconto || 0);
             if (v.tipoProduto === 'Mel') {
                 if (matrizMelQtd[v.melTipo] && matrizMelQtd[v.melTipo][v.melTamanho] !== undefined) {
                     matrizMelQtd[v.melTipo][v.melTamanho] += v.quantidade;
@@ -868,10 +882,12 @@
         for (let i = vendas.length - 1; i >= 0; i--) {
             let v = vendas[i];
             let desc = v.tipoProduto === 'Mel' ? `${v.melTipo} (${v.melTamanho})` : v.nomeProduto;
-            historicoHtml += `<div class="history-item"><b>${v.dataHora}</b> - ${v.quantidade}x ${desc} | ${formatarEuro1Casa(v.totalVenda)} (${v.pagamento})</div>`;
+            let infoDesc = v.desconto > 0 ? ` <small style="color:#bc6c25;">(Desc: ${formatarEuro1Casa(v.desconto)})</small>` : '';
+            historicoHtml += `<div class="history-item"><b>${v.dataHora}</b> - ${v.quantidade}x ${desc} | ${formatarEuro1Casa(v.totalVenda)}${infoDesc} (${v.pagamento})</div>`;
         }
 
         document.getElementById('totalFaturado').innerText = formatarEuro1Casa(faturacaoTotal);
+        document.getElementById('totalDescontos').innerText = formatarEuro1Casa(descontoTotal);
         document.getElementById('historicoVendas').innerHTML = historicoHtml || 'Nenhuma venda registada.';
     }
 
@@ -885,3 +901,4 @@
 
 </body>
 </html>
+```
