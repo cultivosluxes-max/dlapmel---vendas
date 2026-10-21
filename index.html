@@ -6,33 +6,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DLAPMEL - Gestão de Vendas de Mel e Outros Produtos</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fdf6ec; padding: 15px; margin: 0; color: #333; }
-        .container { max-width: 680px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fdf6ec; padding: 12px; margin: 0; color: #333; }
+        .container { max-width: 680px; margin: 0 auto; background: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
         h2 { color: #bc6c25; text-align: center; margin-top: 0; }
         
-        .tab-menu { display: flex; border-bottom: 2px solid #dda15e; margin-bottom: 20px; }
-        .tab-btn { flex: 1; padding: 12px; text-align: center; background: #fefae0; border: none; font-weight: bold; color: #283618; cursor: pointer; border-radius: 8px 8px 0 0; font-size: 14px; }
+        .tab-menu { display: flex; border-bottom: 2px solid #dda15e; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 10px 4px; text-align: center; background: #fefae0; border: none; font-weight: bold; color: #283618; cursor: pointer; border-radius: 8px 8px 0 0; font-size: 13px; }
         .tab-btn.active { background: #dda15e; color: white; }
         
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        .form-group { margin-bottom: 20px; }
-        label { font-weight: bold; display: block; margin-bottom: 8px; color: #283618; font-size: 14px; }
+        .form-group { margin-bottom: 15px; }
+        label { font-weight: bold; display: block; margin-bottom: 6px; color: #283618; font-size: 13px; }
         
-        .row-group { display: flex; gap: 15px; margin-bottom: 20px; }
+        .row-group { display: flex; gap: 10px; margin-bottom: 15px; }
         .row-group .form-group { flex: 1; margin-bottom: 0; }
 
-        .button-group { display: flex; flex-wrap: wrap; gap: 8px; }
+        .button-group { display: flex; flex-wrap: wrap; gap: 6px; }
         .option-btn {
             flex: 1;
             min-width: 28%;
-            padding: 12px;
+            padding: 10px 4px;
             border: 2px solid #dda15e;
             background-color: #fff;
             color: #283618;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
             transition: 0.2s;
             text-align: center;
@@ -47,17 +47,17 @@
         
         input[type="number"], input[type="text"] {
             width: 100%;
-            padding: 14px;
+            padding: 10px;
             box-sizing: border-box;
             border: 2px solid #bc6c25;
             border-radius: 8px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             text-align: center;
             background: #fffdf9;
         }
         
-        /* Remover setas nativas dos inputs numéricos para evitar cortes */
+        /* Remover setas nativas dos inputs numéricos */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
             -webkit-appearance: none;
@@ -67,31 +67,42 @@
             -moz-appearance: textfield;
         }
 
-        /* Estilo para as caixas de preço com botões de controlo integrados */
+        /* Design otimizado para os controlos de preço na tabela */
         .price-control-container {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 2px;
+            background: #fff;
+            border: 1px solid #dda15e;
+            border-radius: 6px;
+            padding: 2px;
         }
         .price-input {
-            width: 65px !important;
-            padding: 8px 4px !important;
-            font-size: 13px !important;
-            text-align: center;
+            width: 48px !important;
+            padding: 4px 0 !important;
+            font-size: 14px !important;
+            text-align: center !important;
+            border: none !important;
+            background: transparent !important;
+            font-weight: bold !important;
         }
         .step-btn {
             background-color: #dda15e;
             color: #283618;
-            border: 1px solid #bc6c25;
-            padding: 8px 8px;
+            border: none;
+            width: 26px;
+            height: 28px;
             font-weight: bold;
-            font-size: 12px;
-            border-radius: 6px;
+            font-size: 15px;
+            border-radius: 4px;
             cursor: pointer;
-            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
         }
-        .step-btn:hover {
+        .step-btn:active {
             background-color: #bc6c25;
             color: white;
         }
@@ -101,8 +112,8 @@
             color: #283618;
             border: none;
             width: 100%;
-            padding: 14px;
-            font-size: 16px;
+            padding: 12px;
+            font-size: 15px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
@@ -116,8 +127,8 @@
             color: white;
             border: none;
             width: 100%;
-            padding: 15px;
-            font-size: 16px;
+            padding: 14px;
+            font-size: 15px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
@@ -126,20 +137,20 @@
         }
         .submit-btn:hover { background-color: #386641; }
 
-        .summary-card { background: #fefae0; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; border-left: 5px solid #bc6c25; }
-        .summary-card h4 { margin: 0 0 8px 0; color: #606c38; font-size: 14px; }
-        .summary-card p { margin: 0; font-size: 16px; font-weight: bold; color: #283618; }
+        .summary-card { background: #fefae0; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 5px solid #bc6c25; }
+        .summary-card h4 { margin: 0 0 6px 0; color: #606c38; font-size: 13px; }
+        .summary-card p { margin: 0; font-size: 15px; font-weight: bold; color: #283618; }
         
         .price-table, .matrix-summary-table, .payment-summary-table, .cart-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px; }
-        .price-table th, .price-table td, .matrix-summary-table th, .matrix-summary-table td, .payment-summary-table th, .payment-summary-table td, .cart-table th, .cart-table td { border: 1px solid #dda15e; padding: 8px 4px; text-align: center; }
-        .price-table th, .matrix-summary-table th, .payment-summary-table th, .cart-table th { background: #fefae0; color: #283618; }
-        .price-table td:first-child, .cart-table td:first-child { text-align: left; font-weight: bold; }
+        .price-table th, .price-table td, .matrix-summary-table th, .matrix-summary-table td, .payment-summary-table th, .payment-summary-table td, .cart-table th, .cart-table td { border: 1px solid #dda15e; padding: 6px 2px; text-align: center; }
+        .price-table th, .matrix-summary-table th, .payment-summary-table th, .cart-table th { background: #fefae0; color: #283618; font-weight: bold; }
+        .price-table td:first-child, .cart-table td:first-child { text-align: left; font-weight: bold; padding-left: 6px; }
         
-        .history-list { font-size: 13px; color: #555; max-height: 150px; overflow-y: auto; margin-top: 5px; }
+        .history-list { font-size: 12px; color: #555; max-height: 150px; overflow-y: auto; margin-top: 5px; }
         .history-item { padding: 6px 0; border-bottom: 1px solid #eee; }
         
         .section-divider { margin: 15px 0 10px 0; font-size: 13px; font-weight: bold; color: #bc6c25; border-bottom: 1px dashed #dda15e; padding-bottom: 4px; }
-        .cart-container { background: #fffaf0; border: 2px dashed #dda15e; padding: 15px; border-radius: 10px; margin-top: 20px; }
+        .cart-container { background: #fffaf0; border: 2px dashed #dda15e; padding: 12px; border-radius: 10px; margin-top: 15px; }
         .remove-btn { background: #bc6c25; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
 
         @media print {
@@ -155,15 +166,15 @@
 
 <div class="container">
     <!-- Cabeçalho -->
-    <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #dda15e; padding-bottom: 12px;">
-        <h2 style="margin: 0; color: #bc6c25; font-size: 24px;">DLAPMEL - Gestão de Vendas</h2>
+    <div style="text-align: center; margin-bottom: 15px; border-bottom: 2px solid #dda15e; padding-bottom: 10px;">
+        <h2 style="margin: 0; color: #bc6c25; font-size: 22px;">DLAPMEL - Gestão de Vendas</h2>
     </div>
 
     <!-- Navegação por Abas -->
     <div class="tab-menu">
         <button class="tab-btn active" onclick="mudarAba('inicioTab', this)">🏠 Início</button>
         <button class="tab-btn" onclick="mudarAba('vendasTab', this)">🛒 Vendas</button>
-        <button class="tab-btn" onclick="mudarAba('precosTab', this)">🏷️ Tabela de Preços</button>
+        <button class="tab-btn" onclick="mudarAba('precosTab', this)">🏷️ Preços</button>
         <button class="tab-btn" onclick="mudarAba('resumoTab', this)">📊 Resumo</button>
     </div>
 
@@ -246,7 +257,7 @@
         </form>
 
         <div class="cart-container">
-            <h3 style="margin-top:0; color:#bc6c25; font-size:16px;">🛒 Lista de Produtos na Venda Atual</h3>
+            <h3 style="margin-top:0; color:#bc6c25; font-size:15px;">🛒 Lista de Produtos na Venda Atual</h3>
             <div style="overflow-x:auto;">
                 <table class="cart-table">
                     <thead>
@@ -264,11 +275,11 @@
                 </table>
             </div>
 
-            <div style="text-align:right; font-size:16px; font-weight:bold; margin-bottom:15px; color:#283618;">
+            <div style="text-align:right; font-size:15px; font-weight:bold; margin-bottom:12px; color:#283618;">
                 Total da Pré-Venda: <span id="cartTotal">0,0 €</span>
             </div>
 
-            <div class="form-group" style="margin-bottom:15px;">
+            <div class="form-group" style="margin-bottom:12px;">
                 <label>Método de Pagamento:</label>
                 <div class="button-group">
                     <button type="button" class="option-btn active" onclick="selecionarOpcaoPagamento('Dinheiro', this)">Dinheiro</button>
@@ -286,17 +297,17 @@
     <!-- ABA 2: TABELA DE PREÇOS -->
     <div id="precosTab" class="tab-content">
         <h3>🏷️ Tabela de Preços</h3>
-        <p style="font-size:12px; color:#666;">Usa os botões [-] e [+] para ajustar facilmente os preços (em incrementos de 0,5 €):</p>
+        <p style="font-size:12px; color:#666;">Ajuste os preços facilmente com os botões [-] e [+]:</p>
         
         <h4>Mel (por Tipo e Tamanho)</h4>
         <div style="overflow-x:auto;">
             <table class="price-table">
                 <thead>
                     <tr>
-                        <th>Tipo de Mel</th>
-                        <th>250g</th>
-                        <th>500g</th>
-                        <th>1kg</th>
+                        <th style="width:28%;">Tipo</th>
+                        <th style="width:24%;">250g</th>
+                        <th style="width:24%;">500g</th>
+                        <th style="width:24%;">1kg</th>
                     </tr>
                 </thead>
                 <tbody id="tabelaPrecosMelBody"></tbody>
@@ -308,8 +319,8 @@
             <table class="price-table">
                 <thead>
                     <tr>
-                        <th>Produto</th>
-                        <th>Preço Unitário (€)</th>
+                        <th style="width:50%;">Produto</th>
+                        <th style="width:50%;">Preço (€)</th>
                     </tr>
                 </thead>
                 <tbody id="tabelaPrecosOutrosBody"></tbody>
@@ -324,16 +335,16 @@
         <h3>📊 Resumo de Vendas</h3>
 
         <div class="summary-card" style="background: #283618; color: white; border-left: 5px solid #dda15e; text-align: center; cursor: pointer;" onclick="exportarResumoPDF()">
-            <h4 style="color: #fefae0; margin-bottom: 5px;">📄 Exportar / Guardar Resumo em PDF</h4>
-            <p style="color: #fff; font-size: 14px; font-weight: normal;">Clique aqui para imprimir ou guardar o resumo e histórico em formato PDF</p>
+            <h4 style="color: #fefae0; margin-bottom: 4px;">📄 Exportar / Guardar Resumo em PDF</h4>
+            <p style="color: #fff; font-size: 13px; font-weight: normal;">Clique aqui para imprimir ou guardar o resumo em PDF</p>
         </div>
 
         <!-- Cabeçalho do Evento no Resumo -->
         <div class="summary-card" style="background: #fefae0; border-left: 5px solid #bc6c25;">
             <h4>📋 Dados do Evento</h4>
-            <p id="resumoEventoNome" style="margin-bottom: 4px; font-size: 15px; color: #283618;"><b>Evento:</b> -</p>
-            <p id="resumoEventoLocal" style="margin-bottom: 4px; font-size: 15px; color: #283618;"><b>Local:</b> -</p>
-            <p id="resumoEventoData" style="margin: 0; font-size: 14px; color: #555; font-weight: normal;"><b>Data:</b> -</p>
+            <p id="resumoEventoNome" style="margin-bottom: 4px; font-size: 14px; color: #283618;"><b>Evento:</b> -</p>
+            <p id="resumoEventoLocal" style="margin-bottom: 4px; font-size: 14px; color: #283618;"><b>Local:</b> -</p>
+            <p id="resumoEventoData" style="margin: 0; font-size: 13px; color: #555; font-weight: normal;"><b>Data:</b> -</p>
         </div>
 
         <div class="summary-card">
@@ -365,7 +376,7 @@
                     <thead>
                         <tr>
                             <th>Produto</th>
-                            <th>Quantidade Total</th>
+                            <th>Qtd Total</th>
                             <th>Total (€)</th>
                         </tr>
                     </thead>
@@ -380,16 +391,14 @@
                 <table class="payment-summary-table" id="paymentResumoTable">
                     <thead>
                         <tr>
-                            <th>Método</th>
                             <th>Dinheiro</th>
                             <th>MB Way</th>
                             <th>Cartão</th>
-                            <th>Transferência</th>
+                            <th>Transf.</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td><b>Total (€)</b></td>
                             <td id="pag_Dinheiro">0,0 €</td>
                             <td id="pag_MBWay">0,0 €</td>
                             <td id="pag_Cartao">0,0 €</td>
@@ -473,7 +482,7 @@
             let val = precosOutros[prod] !== undefined ? precosOutros[prod] : 0;
             let tr = document.createElement('tr');
             tr.innerHTML = `<td>${prod}</td><td>
-                <div class="price-control-container" style="justify-content: flex-start;">
+                <div class="price-control-container">
                     <button type="button" class="step-btn" onclick="alterarPrecoOutroInput('${prod}', -0.5)">-</button>
                     <input type="number" id="poutro_${prod}" class="price-input" value="${val.toFixed(1)}" step="0.5" min="0">
                     <button type="button" class="step-btn" onclick="alterarPrecoOutroInput('${prod}', 0.5)">+</button>
