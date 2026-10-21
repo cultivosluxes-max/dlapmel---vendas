@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -56,11 +57,43 @@
             background: #fffdf9;
         }
         
+        /* Remover setas nativas dos inputs numéricos para evitar cortes */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
-            height: 45px;
-            width: 35px;
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        /* Estilo para as caixas de preço com botões de controlo integrados */
+        .price-control-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .price-input {
+            width: 65px !important;
+            padding: 8px 4px !important;
+            font-size: 13px !important;
+            text-align: center;
+        }
+        .step-btn {
+            background-color: #dda15e;
+            color: #283618;
+            border: 1px solid #bc6c25;
+            padding: 8px 8px;
+            font-weight: bold;
+            font-size: 12px;
+            border-radius: 6px;
             cursor: pointer;
+            transition: 0.2s;
+        }
+        .step-btn:hover {
+            background-color: #bc6c25;
+            color: white;
         }
 
         .action-btn {
@@ -97,12 +130,10 @@
         .summary-card h4 { margin: 0 0 8px 0; color: #606c38; font-size: 14px; }
         .summary-card p { margin: 0; font-size: 16px; font-weight: bold; color: #283618; }
         
-        .price-table, .matrix-summary-table, .payment-summary-table, .cart-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px; }
-        .price-table th, .price-table td, .matrix-summary-table th, .matrix-summary-table td, .payment-summary-table th, .payment-summary-table td, .cart-table th, .cart-table td { border: 1px solid #dda15e; padding: 10px 6px; text-align: center; }
+        .price-table, .matrix-summary-table, .payment-summary-table, .cart-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px; }
+        .price-table th, .price-table td, .matrix-summary-table th, .matrix-summary-table td, .payment-summary-table th, .payment-summary-table td, .cart-table th, .cart-table td { border: 1px solid #dda15e; padding: 8px 4px; text-align: center; }
         .price-table th, .matrix-summary-table th, .payment-summary-table th, .cart-table th { background: #fefae0; color: #283618; }
         .price-table td:first-child, .cart-table td:first-child { text-align: left; font-weight: bold; }
-        
-        .price-table input { width: 75px; padding: 8px; font-size: 14px; text-align: right; border: 2px solid #bc6c25; border-radius: 6px; font-weight: bold; }
         
         .history-list { font-size: 13px; color: #555; max-height: 150px; overflow-y: auto; margin-top: 5px; }
         .history-item { padding: 6px 0; border-bottom: 1px solid #eee; }
@@ -255,31 +286,35 @@
     <!-- ABA 2: TABELA DE PREÇOS -->
     <div id="precosTab" class="tab-content">
         <h3>🏷️ Tabela de Preços</h3>
-        <p style="font-size:12px; color:#666;">Define aqui os preços unitários (€) para mel e demais produtos (incrementos de 0,5 €):</p>
+        <p style="font-size:12px; color:#666;">Usa os botões [-] e [+] para ajustar facilmente os preços (em incrementos de 0,5 €):</p>
         
         <h4>Mel (por Tipo e Tamanho)</h4>
-        <table class="price-table">
-            <thead>
-                <tr>
-                    <th>Tipo de Mel</th>
-                    <th>250g</th>
-                    <th>500g</th>
-                    <th>1kg</th>
-                </tr>
-            </thead>
-            <tbody id="tabelaPrecosMelBody"></tbody>
-        </table>
+        <div style="overflow-x:auto;">
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th>Tipo de Mel</th>
+                        <th>250g</th>
+                        <th>500g</th>
+                        <th>1kg</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaPrecosMelBody"></tbody>
+            </table>
+        </div>
 
         <h4>Outros Produtos</h4>
-        <table class="price-table">
-            <thead>
-                <tr>
-                    <th>Produto</th>
-                    <th>Preço Unitário (€)</th>
-                </tr>
-            </thead>
-            <tbody id="tabelaPrecosOutrosBody"></tbody>
-        </table>
+        <div style="overflow-x:auto;">
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Preço Unitário (€)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaPrecosOutrosBody"></tbody>
+            </table>
+        </div>
 
         <button type="button" class="submit-btn" onclick="guardarPrecosDiscriminados(); alert('Tabela de preços guardada com sucesso!');">Guardar Tabela de Preços</button>
     </div>
@@ -420,7 +455,13 @@
             let html = `<td>${tipo}</td>`;
             tamanhosMel.forEach(tam => {
                 let val = (precosMel[tipo] && precosMel[tipo][tam] !== undefined) ? precosMel[tipo][tam] : 0;
-                html += `<td><input type="number" id="pmel_${tipo}_${tam}" value="${val.toFixed(1)}" step="0.5" min="0"></td>`;
+                html += `<td>
+                    <div class="price-control-container">
+                        <button type="button" class="step-btn" onclick="alterarPrecoMelInput('${tipo}', '${tam}', -0.5)">-</button>
+                        <input type="number" id="pmel_${tipo}_${tam}" class="price-input" value="${val.toFixed(1)}" step="0.5" min="0">
+                        <button type="button" class="step-btn" onclick="alterarPrecoMelInput('${tipo}', '${tam}', 0.5)">+</button>
+                    </div>
+                </td>`;
             });
             tr.innerHTML = html;
             tbodyMel.appendChild(tr);
@@ -431,9 +472,33 @@
         outrosProdutos.forEach(prod => {
             let val = precosOutros[prod] !== undefined ? precosOutros[prod] : 0;
             let tr = document.createElement('tr');
-            tr.innerHTML = `<td>${prod}</td><td><input type="number" id="poutro_${prod}" value="${val.toFixed(1)}" step="0.5" min="0"></td>`;
+            tr.innerHTML = `<td>${prod}</td><td>
+                <div class="price-control-container" style="justify-content: flex-start;">
+                    <button type="button" class="step-btn" onclick="alterarPrecoOutroInput('${prod}', -0.5)">-</button>
+                    <input type="number" id="poutro_${prod}" class="price-input" value="${val.toFixed(1)}" step="0.5" min="0">
+                    <button type="button" class="step-btn" onclick="alterarPrecoOutroInput('${prod}', 0.5)">+</button>
+                </div>
+            </td>`;
             tbodyOutros.appendChild(tr);
         });
+    }
+
+    function alterarPrecoMelInput(tipo, tam, delta) {
+        const input = document.getElementById(`pmel_${tipo}_${tam}`);
+        if (input) {
+            let atual = parseFloat(input.value) || 0;
+            let novo = Math.max(0, atual + delta);
+            input.value = novo.toFixed(1);
+        }
+    }
+
+    function alterarPrecoOutroInput(prod, delta) {
+        const input = document.getElementById(`poutro_${prod}`);
+        if (input) {
+            let atual = parseFloat(input.value) || 0;
+            let novo = Math.max(0, atual + delta);
+            input.value = novo.toFixed(1);
+        }
     }
 
     function guardarPrecosDiscriminados() {
@@ -540,7 +605,6 @@
         document.getElementById('pagamento').value = valor;
     }
 
-    // --- FUNÇÃO CORRIGIDA ---
     function atualizarPrecoVenda() {
         let preco = 0;
         if (estadoAtual.tipoProduto === 'Mel') {
@@ -747,3 +811,4 @@
 
 </body>
 </html>
+```
