@@ -11,10 +11,52 @@
         .container { max-width: 720px; margin: 0 auto; background: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
         h2 { color: #bc6c25; text-align: center; margin-top: 0; }
         
-        .tab-menu { display: flex; border-bottom: 2px solid #dda15e; margin-bottom: 15px; overflow-x: auto; }
-        .tab-btn { flex: 1; min-width: 75px; padding: 10px 2px; text-align: center; background: #fefae0; border: none; font-weight: bold; color: #283618; cursor: pointer; border-radius: 8px 8px 0 0; font-size: 11px; white-space: nowrap; }
-        .tab-btn.active { background: #dda15e; color: white; }
-        
+        /* Menu em Duas Linhas Ajustado para Telemóvel */
+        .tab-menu-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #dda15e;
+            padding-bottom: 8px;
+        }
+        .tab-menu-row {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px 4px;
+            text-align: center;
+            background: #fefae0;
+            border: 1px solid #dda15e;
+            font-weight: bold;
+            color: #283618;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: nowrap;
+            transition: 0.2s;
+        }
+        .tab-btn.resumo-btn {
+            background: #e9edc9;
+            border-color: #283618;
+            font-size: 13px;
+            padding: 13px 4px;
+        }
+        .tab-btn.active {
+            background: #dda15e;
+            color: white;
+            border-color: #bc6c25;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        .tab-btn.resumo-btn.active {
+            background: #283618;
+            color: white;
+            border-color: #1a2410;
+        }
+
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
@@ -224,6 +266,16 @@
         .mode-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; margin-bottom: 10px; }
         .mode-feira { background-color: #dda15e; color: #283618; }
         .mode-revenda { background-color: #283618; color: #fff; }
+
+        /* Estilos específicos para visualização em PDF / Impressão */
+        @media print {
+            body { background: white !important; padding: 0 !important; color: black !important; }
+            .container { max-width: 100% !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
+            .tab-menu-container, .submit-btn, .action-btn, form, .cart-container, .btn-export-pdf { display: none !important; }
+            .tab-content { display: none !important; }
+            #resumoFeiraTab.active, #resumoRevendaTab.active { display: block !important; }
+            .summary-card { border: 1px solid #ccc !important; background: white !important; break-inside: avoid; margin-bottom: 10px !important; }
+        }
     </style>
 </head>
 <body>
@@ -234,14 +286,20 @@
         <h2 style="margin: 0; color: #bc6c25; font-size: 22px;">DLAPMEL - Gestão de Vendas</h2>
     </div>
 
-    <!-- Navegação por Abas -->
-    <div class="tab-menu">
-        <button class="tab-btn active" onclick="mudarAba('inicioTab', this)">🏠 Início</button>
-        <button class="tab-btn" onclick="mudarAba('vendasTab', this)">🛒 Vendas</button>
-        <button class="tab-btn" onclick="mudarAba('precosFeiraTab', this)">🎪 Preços Feira</button>
-        <button class="tab-btn" onclick="mudarAba('precosRevendaTab', this)">🤝 Preços Revenda</button>
-        <button class="tab-btn" onclick="mudarAba('resumoFeiraTab', this)">📊 Resumo Feira</button>
-        <button class="tab-btn" onclick="mudarAba('resumoRevendaTab', this)">🤝 Resumo Revenda</button>
+    <!-- Navegação por Abas em Duas Linhas -->
+    <div class="tab-menu-container">
+        <!-- Linha 1: Operações de Registo e Preços -->
+        <div class="tab-menu-row">
+            <button class="tab-btn active" onclick="mudarAba('inicioTab', this)">🏠 Início</button>
+            <button class="tab-btn" onclick="mudarAba('vendasTab', this)">🛒 Vendas</button>
+            <button class="tab-btn" onclick="mudarAba('precosFeiraTab', this)">🎪 Preços Feira</button>
+            <button class="tab-btn" onclick="mudarAba('precosRevendaTab', this)">🤝 Preços Revenda</button>
+        </div>
+        <!-- Linha 2: Resumos e Relatórios -->
+        <div class="tab-menu-row">
+            <button class="tab-btn resumo-btn" onclick="mudarAba('resumoFeiraTab', this)">📊 Resumo Feira</button>
+            <button class="tab-btn resumo-btn" onclick="mudarAba('resumoRevendaTab', this)">🤝 Resumo Revenda</button>
+        </div>
     </div>
 
     <!-- ABA 0: INÍCIO / TIPO DE OPERAÇÃO E DADOS -->
@@ -468,10 +526,10 @@
     <div id="resumoFeiraTab" class="tab-content">
         <h3>📊 Resumo de Vendas em Feiras</h3>
 
-        <!-- Botão PDF para Feira -->
-        <div class="summary-card" style="background: #283618; color: white; border-left: 5px solid #dda15e; text-align: center; cursor: pointer;" onclick="exportarPDF('feira')">
-            <h4 style="color: #fefae0; margin-bottom: 4px;">📥 Descarregar Resumo de Feira em PDF</h4>
-            <p style="color: #fff; font-size: 13px; font-weight: normal;">Clique para descarregar o relatório em PDF</p>
+        <!-- Botão Visualizar / Abrir PDF para Feira -->
+        <div class="summary-card btn-export-pdf" style="background: #283618; color: white; border-left: 5px solid #dda15e; text-align: center; cursor: pointer;" onclick="abrirPDF('feira')">
+            <h4 style="color: #fefae0; margin-bottom: 4px;">👁️ Abrir / Visualizar Resumo de Feira (PDF)</h4>
+            <p style="color: #fff; font-size: 13px; font-weight: normal;">Clique para abrir a pré-visualização (pode guardar ou imprimir a partir daí)</p>
         </div>
 
         <div id="conteudoPDF_feira">
@@ -562,10 +620,10 @@
     <div id="resumoRevendaTab" class="tab-content">
         <h3>🤝 Resumo de Vendas em Revenda</h3>
 
-        <!-- Botão PDF para Revenda -->
-        <div class="summary-card" style="background: #283618; color: white; border-left: 5px solid #dda15e; text-align: center; cursor: pointer;" onclick="exportarPDF('revenda')">
-            <h4 style="color: #fefae0; margin-bottom: 4px;">📥 Descarregar Resumo de Revenda em PDF</h4>
-            <p style="color: #fff; font-size: 13px; font-weight: normal;">Clique para descarregar o relatório em PDF</p>
+        <!-- Botão Visualizar / Abrir PDF para Revenda -->
+        <div class="summary-card btn-export-pdf" style="background: #283618; color: white; border-left: 5px solid #dda15e; text-align: center; cursor: pointer;" onclick="abrirPDF('revenda')">
+            <h4 style="color: #fefae0; margin-bottom: 4px;">👁️ Abrir / Visualizar Resumo de Revenda (PDF)</h4>
+            <p style="color: #fff; font-size: 13px; font-weight: normal;">Clique para abrir a pré-visualização (pode guardar ou imprimir a partir daí)</p>
         </div>
 
         <div id="conteudoPDF_revenda">
@@ -1107,20 +1165,9 @@
         alert('Venda registada com sucesso!');
     }
 
-    function exportarPDF(tipo) {
-        const elemento = document.getElementById(tipo === 'feira' ? 'conteudoPDF_feira' : 'conteudoPDF_revenda');
-        const nomeEvento = document.getElementById('nomeEvento').value.trim().replace(/[^a-zA-Z0-9]/g, '_') || tipo;
-        const dataEvento = document.getElementById('dataEvento').value.trim().replace(/[^a-zA-Z0-9]/g, '_') || 'Data';
-
-        const opcoes = {
-            margin:       10,
-            filename:     `Resumo_${tipo.toUpperCase()}_DLAPMEL_${nomeEvento}_${dataEvento}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        html2pdf().set(opcoes).from(elemento).save();
+    // Função para abrir de imediato a janela de visualização do PDF / Impressão
+    function abrirPDF(tipo) {
+        window.print();
     }
 
     function atualizarResumos() {
