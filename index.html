@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DLAPMEL - Gestão de Vendas de Mel e Outros Produtos</title>
-    <!-- Biblioteca html2pdf para geração e download automático de PDF -->
+    <!-- Biblioteca html2pdf para geração e visualização em PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fdf6ec; padding: 12px; margin: 0; color: #333; }
@@ -266,16 +266,6 @@
         .mode-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; margin-bottom: 10px; }
         .mode-feira { background-color: #dda15e; color: #283618; }
         .mode-revenda { background-color: #283618; color: #fff; }
-
-        /* Estilos específicos para visualização em PDF / Impressão */
-        @media print {
-            body { background: white !important; padding: 0 !important; color: black !important; }
-            .container { max-width: 100% !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
-            .tab-menu-container, .submit-btn, .action-btn, form, .cart-container, .btn-export-pdf { display: none !important; }
-            .tab-content { display: none !important; }
-            #resumoFeiraTab.active, #resumoRevendaTab.active { display: block !important; }
-            .summary-card { border: 1px solid #ccc !important; background: white !important; break-inside: avoid; margin-bottom: 10px !important; }
-        }
     </style>
 </head>
 <body>
@@ -526,10 +516,10 @@
     <div id="resumoFeiraTab" class="tab-content">
         <h3>📊 Resumo de Vendas em Feiras</h3>
 
-        <!-- Botão Visualizar / Abrir PDF para Feira -->
+        <!-- Botão Abrir PDF para Feira -->
         <div class="summary-card btn-export-pdf" style="background: #283618; color: white; border-left: 5px solid #dda15e; text-align: center; cursor: pointer;" onclick="abrirPDF('feira')">
-            <h4 style="color: #fefae0; margin-bottom: 4px;">👁️ Abrir / Visualizar Resumo de Feira (PDF)</h4>
-            <p style="color: #fff; font-size: 13px; font-weight: normal;">Clique para abrir a pré-visualização (pode guardar ou imprimir a partir daí)</p>
+            <h4 style="color: #fefae0; margin-bottom: 4px;">📄 Abrir Resumo de Feira em PDF</h4>
+            <p style="color: #fff; font-size: 13px; font-weight: normal;">Clique para gerar e abrir o documento PDF numa nova janela</p>
         </div>
 
         <div id="conteudoPDF_feira">
@@ -620,10 +610,10 @@
     <div id="resumoRevendaTab" class="tab-content">
         <h3>🤝 Resumo de Vendas em Revenda</h3>
 
-        <!-- Botão Visualizar / Abrir PDF para Revenda -->
+        <!-- Botão Abrir PDF para Revenda -->
         <div class="summary-card btn-export-pdf" style="background: #283618; color: white; border-left: 5px solid #dda15e; text-align: center; cursor: pointer;" onclick="abrirPDF('revenda')">
-            <h4 style="color: #fefae0; margin-bottom: 4px;">👁️ Abrir / Visualizar Resumo de Revenda (PDF)</h4>
-            <p style="color: #fff; font-size: 13px; font-weight: normal;">Clique para abrir a pré-visualização (pode guardar ou imprimir a partir daí)</p>
+            <h4 style="color: #fefae0; margin-bottom: 4px;">📄 Abrir Resumo de Revenda em PDF</h4>
+            <p style="color: #fff; font-size: 13px; font-weight: normal;">Clique para gerar e abrir o documento PDF numa nova janela</p>
         </div>
 
         <div id="conteudoPDF_revenda">
@@ -1165,9 +1155,24 @@
         alert('Venda registada com sucesso!');
     }
 
-    // Função para abrir de imediato a janela de visualização do PDF / Impressão
+    // Gera o PDF via html2pdf e abre-o diretamente numa nova janela como documento PDF (Blob URL)
     function abrirPDF(tipo) {
-        window.print();
+        const elemento = document.getElementById(tipo === 'feira' ? 'conteudoPDF_feira' : 'conteudoPDF_revenda');
+        const nomeEvento = document.getElementById('nomeEvento').value.trim().replace(/[^a-zA-Z0-9]/g, '_') || tipo;
+        const dataEvento = document.getElementById('dataEvento').value.trim().replace(/[^a-zA-Z0-9]/g, '_') || 'Data';
+        const nomeFicheiro = `Resumo_${tipo.toUpperCase()}_DLAPMEL_${nomeEvento}_${dataEvento}.pdf`;
+
+        const opcoes = {
+            margin:       10,
+            filename:     nomeFicheiro,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opcoes).from(elemento).outputPdf('bloburl').then(function(pdfUrl) {
+            window.open(pdfUrl, '_blank');
+        });
     }
 
     function atualizarResumos() {
