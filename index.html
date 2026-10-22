@@ -1,17 +1,18 @@
-```html
 <!DOCTYPE html>
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DLAPMEL - Gestão de Vendas de Mel e Outros Produtos</title>
+    <!-- Biblioteca html2pdf para geração e download automático de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fdf6ec; padding: 12px; margin: 0; color: #333; }
-        .container { max-width: 680px; margin: 0 auto; background: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
+        .container { max-width: 720px; margin: 0 auto; background: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
         h2 { color: #bc6c25; text-align: center; margin-top: 0; }
         
-        .tab-menu { display: flex; border-bottom: 2px solid #dda15e; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 10px 4px; text-align: center; background: #fefae0; border: none; font-weight: bold; color: #283618; cursor: pointer; border-radius: 8px 8px 0 0; font-size: 13px; }
+        .tab-menu { display: flex; border-bottom: 2px solid #dda15e; margin-bottom: 15px; overflow-x: auto; }
+        .tab-btn { flex: 1; min-width: 75px; padding: 10px 2px; text-align: center; background: #fefae0; border: none; font-weight: bold; color: #283618; cursor: pointer; border-radius: 8px 8px 0 0; font-size: 11px; white-space: nowrap; }
         .tab-btn.active { background: #dda15e; color: white; }
         
         .tab-content { display: none; }
@@ -45,6 +46,30 @@
             font-weight: bold;
         }
         
+        .select-type-btn {
+            flex: 1;
+            padding: 18px;
+            border: 2px solid #dda15e;
+            background-color: #fefae0;
+            color: #283618;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            font-weight: bold;
+        }
+        .select-type-btn.selected-feira {
+            background-color: #dda15e;
+            color: white;
+            border-color: #bc6c25;
+        }
+        .select-type-btn.selected-revenda {
+            background-color: #283618;
+            color: white;
+            border-color: #386641;
+        }
+
         input[type="number"], input[type="text"] {
             width: 100%;
             padding: 10px;
@@ -57,7 +82,6 @@
             background: #fffdf9;
         }
         
-        /* Remover setas nativas dos inputs numéricos */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
             -webkit-appearance: none;
@@ -67,7 +91,47 @@
             -moz-appearance: textfield;
         }
 
-        /* Design otimizado para os controlos de preço e quantidade com botões */
+        .price-vertical-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            background: #fff;
+            border: 1px solid #dda15e;
+            border-radius: 6px;
+            padding: 4px;
+        }
+        .price-vertical-input {
+            width: 100% !important;
+            padding: 4px 0 !important;
+            font-size: 14px !important;
+            text-align: center !important;
+            border: none !important;
+            background: transparent !important;
+            font-weight: bold !important;
+        }
+        .price-buttons-row {
+            display: flex;
+            width: 100%;
+            gap: 2px;
+        }
+        .step-btn-vertical {
+            flex: 1;
+            background-color: #dda15e;
+            color: #283618;
+            border: none;
+            padding: 4px 0;
+            font-weight: bold;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .step-btn-vertical:active {
+            background-color: #bc6c25;
+            color: white;
+        }
+
         .price-control-container {
             display: inline-flex;
             align-items: center;
@@ -146,24 +210,20 @@
         .summary-card p { margin: 0; font-size: 15px; font-weight: bold; color: #283618; }
         
         .price-table, .matrix-summary-table, .payment-summary-table, .cart-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px; }
-        .price-table th, .price-table td, .matrix-summary-table th, .matrix-summary-table td, .payment-summary-table th, .payment-summary-table td, .cart-table th, .cart-table td { border: 1px solid #dda15e; padding: 6px 2px; text-align: center; }
+        .price-table th, .price-table td, .matrix-summary-table th, .matrix-summary-table td, .payment-summary-table th, .payment-summary-table td, .cart-table th, .cart-table td { border: 1px solid #dda15e; padding: 6px 2px; text-align: center; vertical-align: middle; }
         .price-table th, .matrix-summary-table th, .payment-summary-table th, .cart-table th { background: #fefae0; color: #283618; font-weight: bold; }
         .price-table td:first-child, .cart-table td:first-child { text-align: left; font-weight: bold; padding-left: 6px; }
         
-        .history-list { font-size: 12px; color: #555; max-height: 150px; overflow-y: auto; margin-top: 5px; }
+        .history-list { font-size: 12px; color: #555; max-height: 180px; overflow-y: auto; margin-top: 5px; }
         .history-item { padding: 6px 0; border-bottom: 1px solid #eee; }
         
         .section-divider { margin: 15px 0 10px 0; font-size: 13px; font-weight: bold; color: #bc6c25; border-bottom: 1px dashed #dda15e; padding-bottom: 4px; }
         .cart-container { background: #fffaf0; border: 2px dashed #dda15e; padding: 12px; border-radius: 10px; margin-top: 15px; }
         .remove-btn { background: #bc6c25; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
 
-        @media print {
-            body { background: white; padding: 0; }
-            .container { max-width: 100%; box-shadow: none; padding: 0; }
-            .tab-menu, .submit-btn, .action-btn, form, .cart-container, #inicioTab, #vendasTab, #precosTab { display: none !important; }
-            #resumoTab { display: block !important; }
-            .summary-card { border: 1px solid #ddd; break-inside: avoid; }
-        }
+        .mode-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; margin-bottom: 10px; }
+        .mode-feira { background-color: #dda15e; color: #283618; }
+        .mode-revenda { background-color: #283618; color: #fff; }
     </style>
 </head>
 <body>
@@ -178,28 +238,35 @@
     <div class="tab-menu">
         <button class="tab-btn active" onclick="mudarAba('inicioTab', this)">🏠 Início</button>
         <button class="tab-btn" onclick="mudarAba('vendasTab', this)">🛒 Vendas</button>
-        <button class="tab-btn" onclick="mudarAba('precosTab', this)">🏷️ Preços</button>
-        <button class="tab-btn" onclick="mudarAba('resumoTab', this)">📊 Resumo</button>
+        <button class="tab-btn" onclick="mudarAba('precosFeiraTab', this)">🎪 Preços Feira</button>
+        <button class="tab-btn" onclick="mudarAba('precosRevendaTab', this)">🤝 Preços Revenda</button>
+        <button class="tab-btn" onclick="mudarAba('resumoFeiraTab', this)">📊 Resumo Feira</button>
+        <button class="tab-btn" onclick="mudarAba('resumoRevendaTab', this)">🤝 Resumo Revenda</button>
     </div>
 
-    <!-- ABA 0: INÍCIO / DADOS DO EVENTO -->
+    <!-- ABA 0: INÍCIO / TIPO DE OPERAÇÃO E DADOS -->
     <div id="inicioTab" class="tab-content active">
-        <h3>🏠 Informações do Evento e Local</h3>
-        <p style="font-size:12px; color:#666;">Defina os dados do evento atual. É obrigatório preencher o nome e o local para avançar.</p>
+        <h3>🏠 Selecione o Tipo de Atividade</h3>
+        <p style="font-size:12px; color:#666;">Clique em Feira ou Revenda para preencher automaticamente os dados iniciais:</p>
         
+        <div class="row-group" style="margin-bottom: 20px;">
+            <button type="button" id="btnFeira" class="select-type-btn" onclick="selecionarTipoAtividade('Feira')">🎪 Feira</button>
+            <button type="button" id="btnRevenda" class="select-type-btn" onclick="selecionarTipoAtividade('Revenda')">🤝 Revenda</button>
+        </div>
+
         <div class="form-group">
             <label for="dataEvento">Data(s) do Evento:</label>
-            <input type="text" id="dataEvento" placeholder="Ex: 21 a 23 de Outubro de 2026">
+            <input type="text" id="dataEvento" placeholder="Selecione Feira ou Revenda acima...">
         </div>
 
         <div class="form-group">
-            <label for="nomeEvento">Nome do Evento:</label>
-            <input type="text" id="nomeEvento" placeholder="Introduza o nome do evento...">
+            <label for="nomeEvento">Nome do Evento / Cliente:</label>
+            <input type="text" id="nomeEvento" placeholder="Selecione Feira ou Revenda acima...">
         </div>
 
         <div class="form-group">
-            <label for="localEvento">Local do Evento:</label>
-            <input type="text" id="localEvento" placeholder="Introduza o local do evento...">
+            <label for="localEvento">Local:</label>
+            <input type="text" id="localEvento" placeholder="Introduza o local...">
         </div>
 
         <button type="button" class="submit-btn" onclick="if(guardarDadosEvento()) { mudarAba('vendasTab', document.querySelectorAll('.tab-btn')[1]); }">💾 Guardar e Avançar para Vendas</button>
@@ -207,6 +274,10 @@
 
     <!-- ABA 1: REGISTO DE VENDAS -->
     <div id="vendasTab" class="tab-content">
+        <div style="text-align: center;">
+            <span id="badgeModoVenda" class="mode-badge mode-feira">Modo Ativo: Preços de Feira</span>
+        </div>
+
         <form id="itemForm" onsubmit="event.preventDefault(); adicionarAoCarrinho();">
             <div class="form-group">
                 <label>Tipo de Mel:</label>
@@ -223,9 +294,9 @@
             <div class="form-group" id="tamanhoMelGroup">
                 <label>Tamanho do Frasco (Mel):</label>
                 <div class="button-group">
-                    <button type="button" class="option-btn active" onclick="selecionarTamanhoMel('250g', this)">250g</button>
+                    <button type="button" class="option-btn active" onclick="selecionarTamanhoMel('1kg', this)">1kg</button>
                     <button type="button" class="option-btn" onclick="selecionarTamanhoMel('500g', this)">500g</button>
-                    <button type="button" class="option-btn" onclick="selecionarTamanhoMel('1kg', this)">1kg</button>
+                    <button type="button" class="option-btn" onclick="selecionarTamanhoMel('250g', this)">250g</button>
                 </div>
             </div>
 
@@ -244,14 +315,14 @@
             </div>
 
             <input type="hidden" id="tipoProduto" value="Mel">
-            <input type="hidden" id="detalheProduto" value="Multifloral - 250g">
+            <input type="hidden" id="detalheProduto" value="Multifloral - 1kg">
 
             <div class="row-group">
                 <div class="form-group">
                     <label for="precoUnitario">Preço Unitário (€):</label>
                     <div class="price-control-container">
                         <button type="button" class="step-btn" onclick="alterarValorInput('precoUnitario', -0.5, 0)">-</button>
-                        <input type="number" id="precoUnitario" class="price-input" value="4.5" step="0.5" min="0">
+                        <input type="number" id="precoUnitario" class="price-input" value="10.0" step="0.5" min="0">
                         <button type="button" class="step-btn" onclick="alterarValorInput('precoUnitario', 0.5, 0)">+</button>
                     </div>
                 </div>
@@ -287,7 +358,6 @@
                 </table>
             </div>
 
-            <!-- Campo de Desconto -->
             <div class="form-group" style="margin-top: 10px; margin-bottom: 10px;">
                 <label for="descontoCarrinho">Desconto (€):</label>
                 <div class="price-control-container" style="max-width: 220px;">
@@ -322,10 +392,10 @@
         </div>
     </div>
 
-    <!-- ABA 2: TABELA DE PREÇOS -->
-    <div id="precosTab" class="tab-content">
-        <h3>🏷️ Tabela de Preços</h3>
-        <p style="font-size:12px; color:#666;">Ajuste os preços facilmente com os botões [-] e [+]:</p>
+    <!-- ABA 2: PREÇOS DE FEIRA -->
+    <div id="precosFeiraTab" class="tab-content">
+        <h3>🎪 Preços de Feira</h3>
+        <p style="font-size:12px; color:#666;">Ajuste os preços de venda para Feiras com os botões [+] e [-]:</p>
         
         <h4>Mel (por Tipo e Tamanho)</h4>
         <div style="overflow-x:auto;">
@@ -333,12 +403,12 @@
                 <thead>
                     <tr>
                         <th style="width:28%;">Tipo</th>
-                        <th style="width:24%;">250g</th>
-                        <th style="width:24%;">500g</th>
                         <th style="width:24%;">1kg</th>
+                        <th style="width:24%;">500g</th>
+                        <th style="width:24%;">250g</th>
                     </tr>
                 </thead>
-                <tbody id="tabelaPrecosMelBody"></tbody>
+                <tbody id="tabelaPrecosFeiraMelBody"></tbody>
             </table>
         </div>
 
@@ -351,122 +421,253 @@
                         <th style="width:50%;">Preço (€)</th>
                     </tr>
                 </thead>
-                <tbody id="tabelaPrecosOutrosBody"></tbody>
+                <tbody id="tabelaPrecosFeiraOutrosBody"></tbody>
             </table>
         </div>
 
-        <button type="button" class="submit-btn" onclick="guardarPrecosDiscriminados(); alert('Tabela de preços guardada com sucesso!');">Guardar Tabela de Preços</button>
+        <button type="button" class="submit-btn" onclick="guardarPrecos('feira'); alert('Preços de Feira guardados com sucesso!');">Guardar Preços de Feira</button>
     </div>
 
-    <!-- ABA 3: RESUMO DE VENDAS -->
-    <div id="resumoTab" class="tab-content">
-        <h3>📊 Resumo de Vendas</h3>
-
-        <div class="summary-card" style="background: #283618; color: white; border-left: 5px solid #dda15e; text-align: center; cursor: pointer;" onclick="exportarResumoPDF()">
-            <h4 style="color: #fefae0; margin-bottom: 4px;">📄 Exportar / Guardar Resumo em PDF</h4>
-            <p style="color: #fff; font-size: 13px; font-weight: normal;">Clique aqui para imprimir ou guardar o resumo em PDF</p>
-        </div>
-
-        <!-- Cabeçalho do Evento no Resumo -->
-        <div class="summary-card" style="background: #fefae0; border-left: 5px solid #bc6c25;">
-            <h4>📋 Dados do Evento</h4>
-            <p id="resumoEventoNome" style="margin-bottom: 4px; font-size: 14px; color: #283618;"><b>Evento:</b> -</p>
-            <p id="resumoEventoLocal" style="margin-bottom: 4px; font-size: 14px; color: #283618;"><b>Local:</b> -</p>
-            <p id="resumoEventoData" style="margin: 0; font-size: 13px; color: #555; font-weight: normal;"><b>Data:</b> -</p>
-        </div>
-
-        <!-- Faturação Total e Total de Descontos lado a lado -->
-        <div class="row-group">
-            <div class="summary-card" style="flex: 1; margin-bottom: 0;">
-                <h4>Faturação Total</h4>
-                <p id="totalFaturado">0,0 €</p>
-            </div>
-            <div class="summary-card" style="flex: 1; margin-bottom: 0; border-left-color: #dda15e;">
-                <h4>Total Descontos</h4>
-                <p id="totalDescontos" style="color: #bc6c25;">0,0 €</p>
-            </div>
-        </div>
-        <div style="margin-bottom: 12px;"></div>
+    <!-- ABA 3: PREÇOS DE REVENDA -->
+    <div id="precosRevendaTab" class="tab-content">
+        <h3>🤝 Preços de Revenda</h3>
+        <p style="font-size:12px; color:#666;">Preços de Revenda (por defeito 1,0 € mais baratos do que Feira):</p>
         
-        <div class="summary-card">
-            <h4>Vendas de Mel (Tipo vs Tamanho)</h4>
-            <div style="overflow-x:auto;">
-                <table class="matrix-summary-table" id="matrixResumoTable">
-                    <thead>
-                        <tr>
-                            <th>Tipo de Mel</th>
-                            <th>250g</th>
-                            <th>500g</th>
-                            <th>1kg</th>
-                        </tr>
-                    </thead>
-                    <tbody id="matrixResumoBody"></tbody>
-                </table>
-            </div>
+        <h4>Mel (por Tipo e Tamanho)</h4>
+        <div style="overflow-x:auto;">
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th style="width:28%;">Tipo</th>
+                        <th style="width:24%;">1kg</th>
+                        <th style="width:24%;">500g</th>
+                        <th style="width:24%;">250g</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaPrecosRevendaMelBody"></tbody>
+            </table>
         </div>
 
-        <div class="summary-card">
-            <h4>Vendas de Outros Produtos</h4>
-            <div style="overflow-x:auto;">
-                <table class="matrix-summary-table" id="outrosResumoTable">
-                    <thead>
-                        <tr>
-                            <th>Produto</th>
-                            <th>Qtd Total</th>
-                            <th>Total (€)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="outrosResumoBody"></tbody>
-                </table>
-            </div>
+        <h4>Outros Produtos</h4>
+        <div style="overflow-x:auto;">
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th style="width:50%;">Produto</th>
+                        <th style="width:50%;">Preço (€)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaPrecosRevendaOutrosBody"></tbody>
+            </table>
         </div>
 
-        <div class="summary-card">
-            <h4>Por Método de Pagamento</h4>
-            <div style="overflow-x:auto;">
-                <table class="payment-summary-table" id="paymentResumoTable">
-                    <thead>
-                        <tr>
-                            <th>Dinheiro</th>
-                            <th>MB Way</th>
-                            <th>Cartão</th>
-                            <th>Transf.</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td id="pag_Dinheiro">0,0 €</td>
-                            <td id="pag_MBWay">0,0 €</td>
-                            <td id="pag_Cartao">0,0 €</td>
-                            <td id="pag_Transferencia">0,0 €</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <button type="button" class="submit-btn" onclick="guardarPrecos('revenda'); alert('Preços de Revenda guardados com sucesso!');">Guardar Preços de Revenda</button>
+    </div>
+
+    <!-- ABA 4: RESUMO DE FEIRAS -->
+    <div id="resumoFeiraTab" class="tab-content">
+        <h3>📊 Resumo de Vendas em Feiras</h3>
+
+        <!-- Botão PDF para Feira -->
+        <div class="summary-card" style="background: #283618; color: white; border-left: 5px solid #dda15e; text-align: center; cursor: pointer;" onclick="exportarPDF('feira')">
+            <h4 style="color: #fefae0; margin-bottom: 4px;">📥 Descarregar Resumo de Feira em PDF</h4>
+            <p style="color: #fff; font-size: 13px; font-weight: normal;">Clique para descarregar o relatório em PDF</p>
         </div>
 
-        <div class="summary-card">
-            <h4>Histórico de Registos</h4>
-            <div id="historicoVendas" class="history-list">Nenhuma venda registada.</div>
+        <div id="conteudoPDF_feira">
+            <div class="summary-card" style="background: #fefae0; border-left: 5px solid #bc6c25;">
+                <h4>📋 Dados do Evento (Feira)</h4>
+                <p id="resumoFeiraNome" style="margin-bottom: 4px; font-size: 14px; color: #283618;"><b>Evento:</b> -</p>
+                <p id="resumoFeiraLocal" style="margin-bottom: 4px; font-size: 14px; color: #283618;"><b>Local:</b> -</p>
+                <p id="resumoFeiraData" style="margin: 0; font-size: 13px; color: #555; font-weight: normal;"><b>Data:</b> -</p>
+            </div>
+
+            <div class="row-group">
+                <div class="summary-card" style="flex: 1; margin-bottom: 0;">
+                    <h4>Faturação Total (Feira)</h4>
+                    <p id="totalFaturadoFeira">0,0 €</p>
+                </div>
+                <div class="summary-card" style="flex: 1; margin-bottom: 0; border-left-color: #dda15e;">
+                    <h4>Total Descontos (Feira)</h4>
+                    <p id="totalDescontosFeira" style="color: #bc6c25;">0,0 €</p>
+                </div>
+            </div>
+            <div style="margin-bottom: 12px;"></div>
+            
+            <div class="summary-card">
+                <h4>Vendas de Mel em Feira (Tipo vs Tamanho)</h4>
+                <div style="overflow-x:auto;">
+                    <table class="matrix-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Tipo de Mel</th>
+                                <th>1kg</th>
+                                <th>500g</th>
+                                <th>250g</th>
+                            </tr>
+                        </thead>
+                        <tbody id="matrixResumoFeiraBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <h4>Vendas de Outros Produtos em Feira</h4>
+                <div style="overflow-x:auto;">
+                    <table class="matrix-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Qtd Total</th>
+                                <th>Total (€)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="outrosResumoFeiraBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <h4>Por Método de Pagamento (Feira)</h4>
+                <div style="overflow-x:auto;">
+                    <table class="payment-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Dinheiro</th>
+                                <th>MB Way</th>
+                                <th>Cartão</th>
+                                <th>Transf.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td id="pag_Feira_Dinheiro">0,0 €</td>
+                                <td id="pag_Feira_MBWay">0,0 €</td>
+                                <td id="pag_Feira_Cartao">0,0 €</td>
+                                <td id="pag_Feira_Transferencia">0,0 €</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <h4>🎪 Histórico de Registos (Feira)</h4>
+                <div id="historicoVendasFeira" class="history-list">Nenhuma venda em feira registada.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ABA 5: RESUMO DE REVENDA -->
+    <div id="resumoRevendaTab" class="tab-content">
+        <h3>🤝 Resumo de Vendas em Revenda</h3>
+
+        <!-- Botão PDF para Revenda -->
+        <div class="summary-card" style="background: #283618; color: white; border-left: 5px solid #dda15e; text-align: center; cursor: pointer;" onclick="exportarPDF('revenda')">
+            <h4 style="color: #fefae0; margin-bottom: 4px;">📥 Descarregar Resumo de Revenda em PDF</h4>
+            <p style="color: #fff; font-size: 13px; font-weight: normal;">Clique para descarregar o relatório em PDF</p>
+        </div>
+
+        <div id="conteudoPDF_revenda">
+            <div class="summary-card" style="background: #fefae0; border-left: 5px solid #283618;">
+                <h4>📋 Dados do Cliente / Registo (Revenda)</h4>
+                <p id="resumoRevendaNome" style="margin-bottom: 4px; font-size: 14px; color: #283618;"><b>Cliente:</b> -</p>
+                <p id="resumoRevendaLocal" style="margin-bottom: 4px; font-size: 14px; color: #283618;"><b>Local:</b> -</p>
+                <p id="resumoRevendaData" style="margin: 0; font-size: 13px; color: #555; font-weight: normal;"><b>Data:</b> -</p>
+            </div>
+
+            <div class="row-group">
+                <div class="summary-card" style="flex: 1; margin-bottom: 0;">
+                    <h4>Faturação Total (Revenda)</h4>
+                    <p id="totalFaturadoRevenda">0,0 €</p>
+                </div>
+                <div class="summary-card" style="flex: 1; margin-bottom: 0; border-left-color: #283618;">
+                    <h4>Total Descontos (Revenda)</h4>
+                    <p id="totalDescontosRevenda" style="color: #bc6c25;">0,0 €</p>
+                </div>
+            </div>
+            <div style="margin-bottom: 12px;"></div>
+            
+            <div class="summary-card">
+                <h4>Vendas de Mel em Revenda (Tipo vs Tamanho)</h4>
+                <div style="overflow-x:auto;">
+                    <table class="matrix-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Tipo de Mel</th>
+                                <th>1kg</th>
+                                <th>500g</th>
+                                <th>250g</th>
+                            </tr>
+                        </thead>
+                        <tbody id="matrixResumoRevendaBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <h4>Vendas de Outros Produtos em Revenda</h4>
+                <div style="overflow-x:auto;">
+                    <table class="matrix-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Qtd Total</th>
+                                <th>Total (€)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="outrosResumoRevendaBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <h4>Por Método de Pagamento (Revenda)</h4>
+                <div style="overflow-x:auto;">
+                    <table class="payment-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Dinheiro</th>
+                                <th>MB Way</th>
+                                <th>Cartão</th>
+                                <th>Transf.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td id="pag_Revenda_Dinheiro">0,0 €</td>
+                                <td id="pag_Revenda_MBWay">0,0 €</td>
+                                <td id="pag_Revenda_Cartao">0,0 €</td>
+                                <td id="pag_Revenda_Transferencia">0,0 €</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <h4>🤝 Histórico de Registos (Revenda)</h4>
+                <div id="historicoVendasRevenda" class="history-list">Nenhuma venda em revenda registada.</div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
     const tiposMel = ['Multifloral', 'Rosmaninho', 'Eucalipto', 'Laranjeiro', 'Castanheiro', 'Urze'];
-    const tamanhosMel = ['250g', '500g', '1kg'];
+    const tamanhosMel = ['1kg', '500g', '250g'];
     const outrosProdutos = ['Pólen 110g', 'Pólen 220g', 'Pólen 440g', 'Própolis 30mg', 'Cocktail', 'Outros'];
 
-    const precosMelPadrao = {
-        'Multifloral': { '250g': 4.5, '500g': 6.0, '1kg': 10.0 },
-        'Rosmaninho':  { '250g': 4.5, '500g': 6.0, '1kg': 11.0 },
-        'Eucalipto':   { '250g': 4.5, '500g': 6.0, '1kg': 11.0 },
-        'Laranjeiro':  { '250g': 4.5, '500g': 6.0, '1kg': 12.0 },
-        'Castanheiro': { '250g': 4.5, '500g': 6.0, '1kg': 12.0 },
-        'Urze':        { '250g': 4.5, '500g': 6.0, '1kg': 12.0 }
+    const precosFeiraMelPadrao = {
+        'Multifloral': { '1kg': 10.0, '500g': 6.0, '250g': 4.5 },
+        'Rosmaninho':  { '1kg': 11.0, '500g': 6.0, '250g': 4.5 },
+        'Eucalipto':   { '1kg': 11.0, '500g': 6.0, '250g': 4.5 },
+        'Laranjeiro':  { '1kg': 12.0, '500g': 6.0, '250g': 4.5 },
+        'Castanheiro': { '1kg': 12.0, '500g': 6.0, '250g': 4.5 },
+        'Urze':        { '1kg': 12.0, '500g': 6.0, '250g': 4.5 }
     };
 
-    const precosOutrosPadrao = {
+    const precosFeiraOutrosPadrao = {
         'Pólen 110g': 5.0,
         'Pólen 220g': 8.0,
         'Pólen 440g': 15.0,
@@ -475,21 +676,89 @@
         'Outros': 0.0
     };
 
-    let precosMel = JSON.parse(localStorage.getItem('precos_mel_v14') || JSON.stringify(precosMelPadrao));
-    let precosOutros = JSON.parse(localStorage.getItem('precos_outros_v14') || JSON.stringify(precosOutrosPadrao));
+    function gerarPrecosRevendaPadraoMel(feiraMel) {
+        let rev = {};
+        tiposMel.forEach(tipo => {
+            rev[tipo] = {};
+            tamanhosMel.forEach(tam => {
+                rev[tipo][tam] = Math.max(0, (feiraMel[tipo][tam] || 0) - 1.0);
+            });
+        });
+        return rev;
+    }
+
+    function gerarPrecosRevendaPadraoOutros(feiraOutros) {
+        let rev = {};
+        outrosProdutos.forEach(prod => {
+            rev[prod] = Math.max(0, (feiraOutros[prod] || 0) - 1.0);
+        });
+        return rev;
+    }
+
+    let precosFeiraMel = JSON.parse(localStorage.getItem('precos_feira_mel_v16') || JSON.stringify(precosFeiraMelPadrao));
+    let precosFeiraOutros = JSON.parse(localStorage.getItem('precos_feira_outros_v16') || JSON.stringify(precosFeiraOutrosPadrao));
+    
+    let precosRevendaMel = JSON.parse(localStorage.getItem('precos_revenda_mel_v16') || JSON.stringify(gerarPrecosRevendaPadraoMel(precosFeiraMel)));
+    let precosRevendaOutros = JSON.parse(localStorage.getItem('precos_revenda_outros_v16') || JSON.stringify(gerarPrecosRevendaPadraoOutros(precosFeiraOutros)));
+
+    let modoOperacao = localStorage.getItem('dlapmel_modo_operacao') || ''; 
     let vendas = JSON.parse(localStorage.getItem('vendas_mel_v14') || '[]');
     let carrinho = [];
 
     let estadoAtual = {
         tipoProduto: 'Mel',
         melTipo: 'Multifloral',
-        melTamanho: '250g',
+        melTamanho: '1kg',
         outroItem: null,
         pagamento: 'Dinheiro'
     };
 
     function formatarEuro1Casa(valor) {
         return valor.toFixed(1).replace('.', ',') + ' €';
+    }
+
+    function obterDataAtualFormatada() {
+        const hoje = new Date();
+        const dia = String(hoje.getDate()).padStart(2, '0');
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        const ano = hoje.getFullYear();
+        return `${dia}/${mes}/${ano}`;
+    }
+
+    function selecionarTipoAtividade(tipo) {
+        modoOperacao = tipo;
+        localStorage.setItem('dlapmel_modo_operacao', modoOperacao);
+        
+        const btnFeira = document.getElementById('btnFeira');
+        const btnRevenda = document.getElementById('btnRevenda');
+
+        btnFeira.className = 'select-type-btn';
+        btnRevenda.className = 'select-type-btn';
+
+        const dataHoje = obterDataAtualFormatada();
+        document.getElementById('dataEvento').value = dataHoje;
+
+        if (tipo === 'Feira') {
+            btnFeira.classList.add('selected-feira');
+            document.getElementById('nomeEvento').value = 'Feira de ';
+        } else {
+            btnRevenda.classList.add('selected-revenda');
+            document.getElementById('nomeEvento').value = 'Revenda - ';
+        }
+        document.getElementById('localEvento').value = '';
+        atualizarBadgeModo();
+    }
+
+    function atualizarBadgeModo() {
+        const badge = document.getElementById('badgeModoVenda');
+        if (modoOperacao === 'Revenda') {
+            badge.innerText = 'Modo Ativo: Preços de Revenda (🤝)';
+            badge.className = 'mode-badge mode-revenda';
+        } else {
+            badge.innerText = 'Modo Ativo: Preços de Feira (🎪)';
+            badge.className = 'mode-badge mode-feira';
+        }
+        atualizarPrecoVenda();
     }
 
     function alterarValorInput(idInput, delta, minValor) {
@@ -512,19 +781,21 @@
         }
     }
 
-    function renderizarTabelaPrecos() {
-        const tbodyMel = document.getElementById('tabelaPrecosMelBody');
+    function renderizarTabelaPrecosGenerica(precosMelObj, precosOutrosObj, tbodyMelId, tbodyOutrosId, tipoModo) {
+        const tbodyMel = document.getElementById(tbodyMelId);
         tbodyMel.innerHTML = '';
         tiposMel.forEach(tipo => {
             let tr = document.createElement('tr');
             let html = `<td>${tipo}</td>`;
             tamanhosMel.forEach(tam => {
-                let val = (precosMel[tipo] && precosMel[tipo][tam] !== undefined) ? precosMel[tipo][tam] : 0;
+                let val = (precosMelObj[tipo] && precosMelObj[tipo][tam] !== undefined) ? precosMelObj[tipo][tam] : 0;
                 html += `<td>
-                    <div class="price-control-container">
-                        <button type="button" class="step-btn" onclick="alterarPrecoMelInput('${tipo}', '${tam}', -0.5)">-</button>
-                        <input type="number" id="pmel_${tipo}_${tam}" class="price-input" value="${val.toFixed(1)}" step="0.5" min="0">
-                        <button type="button" class="step-btn" onclick="alterarPrecoMelInput('${tipo}', '${tam}', 0.5)">+</button>
+                    <div class="price-vertical-container">
+                        <input type="number" id="pmel_${tipoModo}_${tipo}_${tam}" class="price-vertical-input" value="${val.toFixed(1)}" step="0.5" min="0">
+                        <div class="price-buttons-row">
+                            <button type="button" class="step-btn-vertical" onclick="alterarPrecoMelInputGenerico('${tipoModo}', '${tipo}', '${tam}', -0.5)">-</button>
+                            <button type="button" class="step-btn-vertical" onclick="alterarPrecoMelInputGenerico('${tipoModo}', '${tipo}', '${tam}', 0.5)">+</button>
+                        </div>
                     </div>
                 </td>`;
             });
@@ -532,24 +803,31 @@
             tbodyMel.appendChild(tr);
         });
 
-        const tbodyOutros = document.getElementById('tabelaPrecosOutrosBody');
+        const tbodyOutros = document.getElementById(tbodyOutrosId);
         tbodyOutros.innerHTML = '';
         outrosProdutos.forEach(prod => {
-            let val = precosOutros[prod] !== undefined ? precosOutros[prod] : 0;
+            let val = precosOutrosObj[prod] !== undefined ? precosOutrosObj[prod] : 0;
             let tr = document.createElement('tr');
             tr.innerHTML = `<td>${prod}</td><td>
-                <div class="price-control-container">
-                    <button type="button" class="step-btn" onclick="alterarPrecoOutroInput('${prod}', -0.5)">-</button>
-                    <input type="number" id="poutro_${prod}" class="price-input" value="${val.toFixed(1)}" step="0.5" min="0">
-                    <button type="button" class="step-btn" onclick="alterarPrecoOutroInput('${prod}', 0.5)">+</button>
+                <div class="price-vertical-container" style="max-width: 140px; margin: 0 auto;">
+                    <input type="number" id="poutro_${tipoModo}_${prod}" class="price-vertical-input" value="${val.toFixed(1)}" step="0.5" min="0">
+                    <div class="price-buttons-row">
+                        <button type="button" class="step-btn-vertical" onclick="alterarPrecoOutroInputGenerico('${tipoModo}', '${prod}', -0.5)">-</button>
+                        <button type="button" class="step-btn-vertical" onclick="alterarPrecoOutroInputGenerico('${tipoModo}', '${prod}', 0.5)">+</button>
+                    </div>
                 </div>
             </td>`;
             tbodyOutros.appendChild(tr);
         });
     }
 
-    function alterarPrecoMelInput(tipo, tam, delta) {
-        const input = document.getElementById(`pmel_${tipo}_${tam}`);
+    function renderizarTabelasPrecos() {
+        renderizarTabelaPrecosGenerica(precosFeiraMel, precosFeiraOutros, 'tabelaPrecosFeiraMelBody', 'tabelaPrecosFeiraOutrosBody', 'feira');
+        renderizarTabelaPrecosGenerica(precosRevendaMel, precosRevendaOutros, 'tabelaPrecosRevendaMelBody', 'tabelaPrecosRevendaOutrosBody', 'revenda');
+    }
+
+    function alterarPrecoMelInputGenerico(tipoModo, tipo, tam, delta) {
+        const input = document.getElementById(`pmel_${tipoModo}_${tipo}_${tam}`);
         if (input) {
             let atual = parseFloat(input.value) || 0;
             let novo = Math.max(0, atual + delta);
@@ -557,8 +835,8 @@
         }
     }
 
-    function alterarPrecoOutroInput(prod, delta) {
-        const input = document.getElementById(`poutro_${prod}`);
+    function alterarPrecoOutroInputGenerico(tipoModo, prod, delta) {
+        const input = document.getElementById(`poutro_${tipoModo}_${prod}`);
         if (input) {
             let atual = parseFloat(input.value) || 0;
             let novo = Math.max(0, atual + delta);
@@ -566,50 +844,79 @@
         }
     }
 
-    function guardarPrecosDiscriminados() {
+    function guardarPrecos(tipoModo) {
+        let targetMel = tipoModo === 'feira' ? precosFeiraMel : precosRevendaMel;
+        let targetOutros = tipoModo === 'feira' ? precosFeiraOutros : precosRevendaOutros;
+
         tiposMel.forEach(tipo => {
-            if (!precosMel[tipo]) precosMel[tipo] = {};
+            if (!targetMel[tipo]) targetMel[tipo] = {};
             tamanhosMel.forEach(tam => {
-                let val = parseFloat(document.getElementById(`pmel_${tipo}_${tam}`).value) || 0;
-                precosMel[tipo][tam] = val;
+                let val = parseFloat(document.getElementById(`pmel_${tipoModo}_${tipo}_${tam}`).value) || 0;
+                targetMel[tipo][tam] = val;
             });
         });
 
         outrosProdutos.forEach(prod => {
-            let val = parseFloat(document.getElementById(`poutro_${prod}`).value) || 0;
-            precosOutros[prod] = val;
+            let val = parseFloat(document.getElementById(`poutro_${tipoModo}_${prod}`).value) || 0;
+            targetOutros[prod] = val;
         });
 
-        localStorage.setItem('precos_mel_v14', JSON.stringify(precosMel));
-        localStorage.setItem('precos_outros_v14', JSON.stringify(precosOutros));
+        if (tipoModo === 'feira') {
+            localStorage.setItem('precos_feira_mel_v16', JSON.stringify(precosFeiraMel));
+            localStorage.setItem('precos_feira_outros_v16', JSON.stringify(precosFeiraOutros));
+        } else {
+            localStorage.setItem('precos_revenda_mel_v16', JSON.stringify(precosRevendaMel));
+            localStorage.setItem('precos_revenda_outros_v16', JSON.stringify(precosRevendaOutros));
+        }
         atualizarPrecoVenda();
     }
 
     function guardarDadosEvento() {
+        if (!modoOperacao) {
+            alert('⚠️ Por favor, selecione primeiro o botão "Feira" ou "Revenda".');
+            return false;
+        }
         const nome = document.getElementById('nomeEvento').value.trim();
         const local = document.getElementById('localEvento').value.trim();
-        if (!nome || !local) {
-            alert('⚠️ Por favor, preencha o Nome do Evento e o Local do Evento.');
+        const data = document.getElementById('dataEvento').value.trim();
+        if (!nome || !local || !data) {
+            alert('⚠️ Por favor, preencha todos os campos obrigatórios (Data, Nome e Local).');
             return false;
         }
         localStorage.setItem('dlapmel_evento_nome', nome);
         localStorage.setItem('dlapmel_evento_local', local);
-        localStorage.setItem('dlapmel_evento_data', document.getElementById('dataEvento').value.trim());
+        localStorage.setItem('dlapmel_evento_data', data);
         return true;
     }
 
     function carregarDadosEvento() {
+        let modoSalvo = localStorage.getItem('dlapmel_modo_operacao');
+        if (modoSalvo) {
+            modoOperacao = modoSalvo;
+            if (modoOperacao === 'Feira') {
+                document.getElementById('btnFeira').classList.add('selected-feira');
+            } else if (modoOperacao === 'Revenda') {
+                document.getElementById('btnRevenda').classList.add('selected-revenda');
+            }
+        }
+        document.getElementById('dataEvento').value = localStorage.getItem('dlapmel_evento_data') || '';
         document.getElementById('nomeEvento').value = localStorage.getItem('dlapmel_evento_nome') || '';
         document.getElementById('localEvento').value = localStorage.getItem('dlapmel_evento_local') || '';
-        document.getElementById('dataEvento').value = localStorage.getItem('dlapmel_evento_data') || '';
+        atualizarBadgeModo();
     }
 
     function mudarAba(abaId, elemento) {
         if (abaId !== 'inicioTab') {
+            if (!modoOperacao) {
+                alert('⚠️ Por favor, selecione Feira ou Revenda na aba Início.');
+                mudarAba('inicioTab', document.querySelector('.tab-btn'));
+                return;
+            }
             const nome = document.getElementById('nomeEvento').value.trim();
             const local = document.getElementById('localEvento').value.trim();
-            if (!nome || !local) {
-                alert('⚠️ Por favor, preencha o Nome do Evento e o Local do Evento na aba Início antes de avançar.');
+            const data = document.getElementById('dataEvento').value.trim();
+            if (!nome || !local || !data) {
+                alert('⚠️ Por favor, preencha todos os campos da aba Início antes de avançar.');
                 mudarAba('inicioTab', document.querySelector('.tab-btn'));
                 return;
             }
@@ -619,8 +926,8 @@
         document.getElementById(abaId).classList.add('active');
         if (elemento) elemento.classList.add('active');
         
-        if (abaId === 'resumoTab') {
-            atualizarResumo();
+        if (abaId === 'resumoFeiraTab' || abaId === 'resumoRevendaTab') {
+            atualizarResumos();
         }
     }
 
@@ -672,15 +979,18 @@
 
     function atualizarPrecoVenda() {
         let preco = 0;
+        let pMel = modoOperacao === 'Revenda' ? precosRevendaMel : precosFeiraMel;
+        let pOutros = modoOperacao === 'Revenda' ? precosRevendaOutros : precosFeiraOutros;
+
         if (estadoAtual.tipoProduto === 'Mel') {
-            if (precosMel[estadoAtual.melTipo] && precosMel[estadoAtual.melTipo][estadoAtual.melTamanho] !== undefined) {
-                preco = precosMel[estadoAtual.melTipo][estadoAtual.melTamanho];
+            if (pMel[estadoAtual.melTipo] && pMel[estadoAtual.melTipo][estadoAtual.melTamanho] !== undefined) {
+                preco = pMel[estadoAtual.melTipo][estadoAtual.melTamanho];
             } else {
-                preco = 4.5;
+                preco = 10.0;
             }
             document.getElementById('detalheProduto').value = `${estadoAtual.melTipo} - ${estadoAtual.melTamanho}`;
         } else {
-            preco = precosOutros[estadoAtual.outroItem] !== undefined ? precosOutros[estadoAtual.outroItem] : 0.0;
+            preco = pOutros[estadoAtual.outroItem] !== undefined ? pOutros[estadoAtual.outroItem] : 0.0;
             document.getElementById('detalheProduto').value = estadoAtual.outroItem;
         }
         document.getElementById('precoUnitario').value = preco.toFixed(1);
@@ -766,7 +1076,6 @@
         const dataHora = new Date().toLocaleString('pt-PT');
         const pagamento = estadoAtual.pagamento;
 
-        // Distribuição proporcional do desconto se houver desconto
         let fatorDesconto = subtotalVenda > 0 ? (totalVendaFinal / subtotalVenda) : 1;
 
         carrinho.forEach(item => {
@@ -774,6 +1083,7 @@
             let descontoItem = item.subtotal - totalItemComDesconto;
             vendas.push({
                 dataHora,
+                modoOperacao: modoOperacao || 'Feira',
                 tipoProduto: item.tipoProduto,
                 nomeProduto: item.nomeProduto,
                 melTipo: item.melTipo,
@@ -792,113 +1102,172 @@
         carrinho = [];
         document.getElementById('descontoCarrinho').value = "0.0";
         renderizarCarrinho();
-        atualizarResumo();
+        atualizarResumos();
 
         alert('Venda registada com sucesso!');
     }
 
-    function exportarResumoPDF() {
-        window.print();
+    function exportarPDF(tipo) {
+        const elemento = document.getElementById(tipo === 'feira' ? 'conteudoPDF_feira' : 'conteudoPDF_revenda');
+        const nomeEvento = document.getElementById('nomeEvento').value.trim().replace(/[^a-zA-Z0-9]/g, '_') || tipo;
+        const dataEvento = document.getElementById('dataEvento').value.trim().replace(/[^a-zA-Z0-9]/g, '_') || 'Data';
+
+        const opcoes = {
+            margin:       10,
+            filename:     `Resumo_${tipo.toUpperCase()}_DLAPMEL_${nomeEvento}_${dataEvento}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opcoes).from(elemento).save();
     }
 
-    function atualizarResumo() {
+    function atualizarResumos() {
         const nomeEv = document.getElementById('nomeEvento').value || '-';
         const localEv = document.getElementById('localEvento').value || '-';
         const dataEv = document.getElementById('dataEvento').value || '-';
         
-        document.getElementById('resumoEventoNome').innerHTML = '<b>Evento:</b> ' + nomeEv;
-        document.getElementById('resumoEventoLocal').innerHTML = '<b>Local:</b> ' + localEv;
-        document.getElementById('resumoEventoData').innerHTML = '<b>Data:</b> ' + dataEv;
+        document.getElementById('resumoFeiraNome').innerHTML = '<b>Evento:</b> ' + nomeEv;
+        document.getElementById('resumoFeiraLocal').innerHTML = '<b>Local:</b> ' + localEv;
+        document.getElementById('resumoFeiraData').innerHTML = '<b>Data:</b> ' + dataEv;
 
-        let faturacaoTotal = 0;
-        let descontoTotal = 0;
-        let matrizMelQtd = {};
+        document.getElementById('resumoRevendaNome').innerHTML = '<b>Cliente:</b> ' + nomeEv;
+        document.getElementById('resumoRevendaLocal').innerHTML = '<b>Local:</b> ' + localEv;
+        document.getElementById('resumoRevendaData').innerHTML = '<b>Data:</b> ' + dataEv;
+
+        let faturacaoFeira = 0, descontoFeira = 0;
+        let faturacaoRevenda = 0, descontoRevenda = 0;
+
+        let matrizMelFeira = {};
+        let matrizMelRevenda = {};
         tiposMel.forEach(tipo => {
-            matrizMelQtd[tipo] = {};
-            tamanhosMel.forEach(tam => { matrizMelQtd[tipo][tam] = 0; });
+            matrizMelFeira[tipo] = { '1kg': 0, '500g': 0, '250g': 0 };
+            matrizMelRevenda[tipo] = { '1kg': 0, '500g': 0, '250g': 0 };
         });
 
-        let vendasOutrosResumo = {};
+        let outrosFeira = {};
+        let outrosRevenda = {};
         outrosProdutos.forEach(prod => {
-            vendasOutrosResumo[prod] = { qtd: 0, total: 0 };
+            outrosFeira[prod] = { qtd: 0, total: 0 };
+            outrosRevenda[prod] = { qtd: 0, total: 0 };
         });
 
-        let porPagamento = { 'Dinheiro': 0, 'MB Way': 0, 'Cartão': 0, 'Transferência': 0 };
-        let historicoHtml = '';
+        let pagFeira = { 'Dinheiro': 0, 'MB Way': 0, 'Cartão': 0, 'Transferência': 0 };
+        let pagRevenda = { 'Dinheiro': 0, 'MB Way': 0, 'Cartão': 0, 'Transferência': 0 };
+
+        let historicoFeiraHtml = '';
+        let historicoRevendaHtml = '';
 
         vendas.forEach((v) => {
-            faturacaoTotal += v.totalVenda;
-            descontoTotal += (v.desconto || 0);
-            if (v.tipoProduto === 'Mel') {
-                if (matrizMelQtd[v.melTipo] && matrizMelQtd[v.melTipo][v.melTamanho] !== undefined) {
-                    matrizMelQtd[v.melTipo][v.melTamanho] += v.quantidade;
-                }
-            } else {
-                if (!vendasOutrosResumo[v.nomeProduto]) {
-                    vendasOutrosResumo[v.nomeProduto] = { qtd: 0, total: 0 };
-                }
-                vendasOutrosResumo[v.nomeProduto].qtd += v.quantidade;
-                vendasOutrosResumo[v.nomeProduto].total += v.totalVenda;
-            }
+            let isRevenda = v.modoOperacao === 'Revenda';
+            let desc = v.tipoProduto === 'Mel' ? `${v.melTipo} (${v.melTamanho})` : v.nomeProduto;
+            let infoDesc = v.desconto > 0 ? ` <small style="color:#bc6c25;">(Desc: ${formatarEuro1Casa(v.desconto)})</small>` : '';
+            let itemHtml = `<div class="history-item"><b>${v.dataHora}</b> - ${v.quantidade}x ${desc} | ${formatarEuro1Casa(v.totalVenda)}${infoDesc} (${v.pagamento})</div>`;
 
-            if (porPagamento[v.pagamento] !== undefined) {
-                porPagamento[v.pagamento] += v.totalVenda;
+            if (isRevenda) {
+                faturacaoRevenda += v.totalVenda;
+                descontoRevenda += (v.desconto || 0);
+                if (v.tipoProduto === 'Mel') {
+                    matrizMelRevenda[v.melTipo][v.melTamanho] += v.quantidade;
+                } else {
+                    outrosRevenda[v.nomeProduto].qtd += v.quantidade;
+                    outrosRevenda[v.nomeProduto].total += v.totalVenda;
+                }
+                if (pagRevenda[v.pagamento] !== undefined) pagRevenda[v.pagamento] += v.totalVenda;
+                historicoRevendaHtml += itemHtml;
+            } else {
+                faturacaoFeira += v.totalVenda;
+                descontoFeira += (v.desconto || 0);
+                if (v.tipoProduto === 'Mel') {
+                    matrizMelFeira[v.melTipo][v.melTamanho] += v.quantidade;
+                } else {
+                    outrosFeira[v.nomeProduto].qtd += v.quantidade;
+                    outrosFeira[v.nomeProduto].total += v.totalVenda;
+                }
+                if (pagFeira[v.pagamento] !== undefined) pagFeira[v.pagamento] += v.totalVenda;
+                historicoFeiraHtml += itemHtml;
             }
         });
 
-        const matrixBody = document.getElementById('matrixResumoBody');
-        matrixBody.innerHTML = '';
+        // Preencher matriz Feira
+        const matrixFeiraBody = document.getElementById('matrixResumoFeiraBody');
+        matrixFeiraBody.innerHTML = '';
         tiposMel.forEach(tipo => {
             let tr = document.createElement('tr');
             let html = `<td><b>${tipo}</b></td>`;
             tamanhosMel.forEach(tam => {
-                let qtd = matrizMelQtd[tipo][tam];
-                html += `<td>${qtd > 0 ? '<b>' + qtd + '</b>' : '-'}</td>`;
+                let q = matrizMelFeira[tipo][tam];
+                html += `<td>${q > 0 ? '<b>' + q + '</b>' : '-'}</td>`;
             });
             tr.innerHTML = html;
-            matrixBody.appendChild(tr);
+            matrixFeiraBody.appendChild(tr);
         });
 
-        const outrosBody = document.getElementById('outrosResumoBody');
-        outrosBody.innerHTML = '';
-        let temOutrosVendas = false;
-        for (let prod in vendasOutrosResumo) {
-            if (vendasOutrosResumo[prod].qtd > 0) {
-                temOutrosVendas = true;
-                let tr = document.createElement('tr');
-                tr.innerHTML = `<td><b>${prod}</b></td><td><b>${vendasOutrosResumo[prod].qtd}</b></td><td><b>${formatarEuro1Casa(vendasOutrosResumo[prod].total)}</b></td>`;
-                outrosBody.appendChild(tr);
+        // Preencher matriz Revenda
+        const matrixRevendaBody = document.getElementById('matrixResumoRevendaBody');
+        matrixRevendaBody.innerHTML = '';
+        tiposMel.forEach(tipo => {
+            let tr = document.createElement('tr');
+            let html = `<td><b>${tipo}</b></td>`;
+            tamanhosMel.forEach(tam => {
+                let q = matrizMelRevenda[tipo][tam];
+                html += `<td>${q > 0 ? '<b>' + q + '</b>' : '-'}</td>`;
+            });
+            tr.innerHTML = html;
+            matrixRevendaBody.appendChild(tr);
+        });
+
+        // Outros Feira
+        const outrosFeiraBody = document.getElementById('outrosResumoFeiraBody');
+        outrosFeiraBody.innerHTML = '';
+        let temFeiraOutros = false;
+        for (let p in outrosFeira) {
+            if (outrosFeira[p].qtd > 0) {
+                temFeiraOutros = true;
+                outrosFeiraBody.innerHTML += `<tr><td><b>${p}</b></td><td><b>${outrosFeira[p].qtd}</b></td><td><b>${formatarEuro1Casa(outrosFeira[p].total)}</b></td></tr>`;
             }
         }
-        if (!temOutrosVendas) {
-            outrosBody.innerHTML = `<tr><td colspan="3" style="color:#777; text-align:center;">Nenhum outro produto vendido.</td></tr>`;
+        if (!temFeiraOutros) outrosFeiraBody.innerHTML = `<tr><td colspan="3" style="color:#777; text-align:center;">Nenhum outro produto em feira.</td></tr>`;
+
+        // Outros Revenda
+        const outrosRevendaBody = document.getElementById('outrosResumoRevendaBody');
+        outrosRevendaBody.innerHTML = '';
+        let temRevendaOutros = false;
+        for (let p in outrosRevenda) {
+            if (outrosRevenda[p].qtd > 0) {
+                temRevendaOutros = true;
+                outrosRevendaBody.innerHTML += `<tr><td><b>${p}</b></td><td><b>${outrosRevenda[p].qtd}</b></td><td><b>${formatarEuro1Casa(outrosRevenda[p].total)}</b></td></tr>`;
+            }
         }
+        if (!temRevendaOutros) outrosRevendaBody.innerHTML = `<tr><td colspan="3" style="color:#777; text-align:center;">Nenhum outro produto em revenda.</td></tr>`;
 
-        document.getElementById('pag_Dinheiro').innerText = formatarEuro1Casa(porPagamento['Dinheiro']);
-        document.getElementById('pag_MBWay').innerText = formatarEuro1Casa(porPagamento['MB Way']);
-        document.getElementById('pag_Cartao').innerText = formatarEuro1Casa(porPagamento['Cartão']);
-        document.getElementById('pag_Transferencia').innerText = formatarEuro1Casa(porPagamento['Transferência']);
+        // Pagamentos Feira
+        document.getElementById('pag_Feira_Dinheiro').innerText = formatarEuro1Casa(pagFeira['Dinheiro']);
+        document.getElementById('pag_Feira_MBWay').innerText = formatarEuro1Casa(pagFeira['MB Way']);
+        document.getElementById('pag_Feira_Cartao').innerText = formatarEuro1Casa(pagFeira['Cartão']);
+        document.getElementById('pag_Feira_Transferencia').innerText = formatarEuro1Casa(pagFeira['Transferência']);
 
-        for (let i = vendas.length - 1; i >= 0; i--) {
-            let v = vendas[i];
-            let desc = v.tipoProduto === 'Mel' ? `${v.melTipo} (${v.melTamanho})` : v.nomeProduto;
-            let infoDesc = v.desconto > 0 ? ` <small style="color:#bc6c25;">(Desc: ${formatarEuro1Casa(v.desconto)})</small>` : '';
-            historicoHtml += `<div class="history-item"><b>${v.dataHora}</b> - ${v.quantidade}x ${desc} | ${formatarEuro1Casa(v.totalVenda)}${infoDesc} (${v.pagamento})</div>`;
-        }
+        // Pagamentos Revenda
+        document.getElementById('pag_Revenda_Dinheiro').innerText = formatarEuro1Casa(pagRevenda['Dinheiro']);
+        document.getElementById('pag_Revenda_MBWay').innerText = formatarEuro1Casa(pagRevenda['MB Way']);
+        document.getElementById('pag_Revenda_Cartao').innerText = formatarEuro1Casa(pagRevenda['Cartão']);
+        document.getElementById('pag_Revenda_Transferencia').innerText = formatarEuro1Casa(pagRevenda['Transferência']);
 
-        document.getElementById('totalFaturado').innerText = formatarEuro1Casa(faturacaoTotal);
-        document.getElementById('totalDescontos').innerText = formatarEuro1Casa(descontoTotal);
-        document.getElementById('historicoVendas').innerHTML = historicoHtml || 'Nenhuma venda registada.';
+        document.getElementById('totalFaturadoFeira').innerText = formatarEuro1Casa(faturacaoFeira);
+        document.getElementById('totalDescontosFeira').innerText = formatarEuro1Casa(descontoFeira);
+        document.getElementById('historicoVendasFeira').innerHTML = historicoFeiraHtml || 'Nenhuma venda em feira registada.';
+
+        document.getElementById('totalFaturadoRevenda').innerText = formatarEuro1Casa(faturacaoRevenda);
+        document.getElementById('totalDescontosRevenda').innerText = formatarEuro1Casa(descontoRevenda);
+        document.getElementById('historicoVendasRevenda').innerHTML = historicoRevendaHtml || 'Nenhuma venda em revenda registada.';
     }
 
-    // Inicialização ao carregar a página
     window.onload = function() {
         carregarDadosEvento();
-        renderizarTabelaPrecos();
-        atualizarPrecoVenda();
+        renderizarTabelasPrecos();
     };
 </script>
 
 </body>
 </html>
-```
