@@ -6,8 +6,6 @@
     <title>DLAPMEL - Gestão de Vendas de Mel e Outros Produtos</title>
     <!-- Biblioteca html2pdf para geração e visualização em PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- Biblioteca XLSX (SheetJS) para geração de ficheiros Excel e Dashboard -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fdf6ec; padding: 12px; margin: 0; color: #333; }
         .container { max-width: 720px; margin: 0 auto; background: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
@@ -269,11 +267,6 @@
             box-sizing: border-box;
             min-height: 52px;
         }
-        .excel-export-btn {
-            background-color: #1d6f42;
-            color: white;
-        }
-        .excel-export-btn:hover { background-color: #144d2e; }
         
         .pdf-export-btn {
             background-color: #283618;
@@ -582,7 +575,6 @@
         <h3>📊 Resumo de Vendas em Feiras</h3>
 
         <div class="export-actions-grid">
-            <button type="button" class="export-btn-action excel-export-btn" onclick="exportarExcel('Feira')">📊 Descarregar Excel</button>
             <button type="button" class="export-btn-action pdf-export-btn" onclick="abrirPDF('feira')">📄 Abrir Resumo PDF</button>
         </div>
 
@@ -691,7 +683,6 @@
         <h3>🤝 Resumo de Vendas em Revenda</h3>
 
         <div class="export-actions-grid">
-            <button type="button" class="export-btn-action excel-export-btn" onclick="exportarExcel('Revenda')">📊 Descarregar Excel</button>
             <button type="button" class="export-btn-action pdf-export-btn" onclick="abrirPDF('revenda')">📄 Abrir Resumo PDF</button>
         </div>
 
@@ -793,6 +784,10 @@
                 <div id="historicoVendasRevenda" class="history-list">Nenhuma venda em revenda registada.</div>
             </div>
         </div>
+    </div>
+    <div style="margin-top:14px;padding-top:10px;border-top:1px solid #dda15e;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#283618;">
+        <span id="syncEstado">—</span>
+        <button class="tab-btn" style="flex:none;padding:8px 12px;" onclick="sincronizarVendas()">☁️ Sincronizar</button>
     </div>
 </div>
 
@@ -1283,6 +1278,7 @@
         const pagamento = estadoAtual.pagamento;
         const nomeEvento = document.getElementById('nomeEvento').value.trim();
         const localEvento = document.getElementById('localEvento').value.trim();
+        const dataEvento = document.getElementById('dataEvento').value.trim();
 
         let fatorDesconto = subtotalVenda > 0 ? (totalVendaFinal / subtotalVenda) : 1;
 
@@ -1294,6 +1290,7 @@
                 modoOperacao: modoOperacao || 'Feira',
                 nomeEvento,
                 localEvento,
+                dataEvento,
                 tipoProduto: item.tipoProduto,
                 nomeProduto: item.nomeProduto,
                 melTipo: item.melTipo,
@@ -1308,6 +1305,7 @@
         });
 
         localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
+        sincronizarVendas();
         
         carrinho = [];
         document.getElementById('descontoCarrinho').value = "0.0";
@@ -1315,93 +1313,6 @@
         atualizarResumos();
 
         alert('Venda registada com sucesso!');
-    }
-
-    // Exportação em Excel Corrigida por Modo (Feira vs Revenda) + Inclusão de Local
-    function exportarExcel(filtroModo) {
-        // Garantir filtragem estrita pelo modo pretendido
-        let vendasFiltradas = vendas.filter(v => v.modoOperacao === filtroModo);
-
-        if (vendasFiltradas.length === 0) {
-            alert(`Não existem vendas registadas no histórico para ${filtroModo}.`);
-            return;
-        }
-
-        const nomeEventoAtual = document.getElementById('nomeEvento').value.trim() || '-';
-        const localEventoAtual = document.getElementById('localEvento').value.trim() || '-';
-
-        let dadosHistorico = vendasFiltradas.map((v, index) => ({
-            'ID Venda': index + 1,
-            'Data / Hora': v.dataHora,
-            'Modo Operação': v.modoOperacao,
-            'Evento / Cliente': v.nomeEvento || nomeEventoAtual,
-            'Local': v.localEvento || localEventoAtual,
-            'Categoria': v.tipoProduto,
-            'Produto': v.nomeProduto,
-            'Quantidade': v.quantidade,
-            'Preço Unitário (€)': v.precoUnitario,
-            'Subtotal (€)': v.subtotal,
-            'Desconto (€)': v.desconto,
-            'Total Final (€)': v.totalVenda,
-            'Método Pagamento': v.pagamento
-        }));
-
-        let totalFaturado = 0;
-        let totalDescontos = 0;
-        let produtosContador = {};
-        let pagamentosContador = { 'Dinheiro': 0, 'MB Way': 0, 'Cartão': 0, 'Transferência': 0 };
-
-        vendasFiltradas.forEach(v => {
-            totalFaturado += v.totalVenda;
-            totalDescontos += (v.desconto || 0);
-
-            produtosContador[v.nomeProduto] = (produtosContador[v.nomeProduto] || 0) + v.quantidade;
-
-            if (pagamentosContador[v.pagamento] !== undefined) {
-                pagamentosContador[v.pagamento] += v.totalVenda;
-            }
-        });
-
-        let dadosDashboard = [
-            { 'Indicador': 'Modo de Venda', 'Valor': filtroModo },
-            { 'Indicador': 'Evento / Cliente', 'Valor': nomeEventoAtual },
-            { 'Indicador': 'Local do Evento', 'Valor': localEventoAtual },
-            { 'Indicador': 'Total Faturado (€)', 'Valor': totalFaturado.toFixed(2) },
-            { 'Indicador': 'Total Descontos Concedidos (€)', 'Valor': totalDescontos.toFixed(2) },
-            { 'Indicador': 'Total de Registos de Linha', 'Valor': vendasFiltradas.length },
-            {},
-            { 'Indicador': '--- RESUMO POR PRODUTO (QTD) ---', 'Valor': '' }
-        ];
-
-        for (let p in produtosContador) {
-            dadosDashboard.push({ 'Indicador': p, 'Valor': produtosContador[p] });
-        }
-
-        dadosDashboard.push({});
-        dadosDashboard.push({ 'Indicador': '--- RESUMO POR PAGAMENTO (€) ---', 'Valor': '' });
-
-        for (let m in pagamentosContador) {
-            dadosDashboard.push({ 'Indicador': m, 'Valor': pagamentosContador[m].toFixed(2) + ' €' });
-        }
-
-        const wb = XLSX.utils.book_new();
-        const wsDashboard = XLSX.utils.json_to_sheet(dadosDashboard);
-        const wsHistorico = XLSX.utils.json_to_sheet(dadosHistorico);
-
-        XLSX.utils.book_append_sheet(wb, wsDashboard, "Dashboard");
-        XLSX.utils.book_append_sheet(wb, wsHistorico, "Historico Vendas");
-
-        const nomeFicheiro = `DLAPMEL_Vendas_${filtroModo}_${obterDataAtualFormatada().replace(/\//g, '-')}.xlsx`;
-        
-        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-        const blob = new Blob([wbout], { type: 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = nomeFicheiro;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 100);
     }
 
     // Geração de PDF com Destaque para o Local do Evento
@@ -1597,9 +1508,57 @@
         document.getElementById('historicoVendasRevenda').innerHTML = historicoRevendaHtml || 'Nenhuma venda em revenda registada.';
     }
 
+
+    // ===== Sincronização com Google Sheets (Apps Script) =====
+    // Cole aqui o URL da implementação web do Apps Script (termina em /exec)
+    const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyPXyGO5wZFJR4S3tl6IRQGSYnFwHS-1f430j1uc7BH3S7EfZqaldbfF9pWn4nv2uT0/exec';
+
+    function mostrarEstadoSync(msg) {
+        const el = document.getElementById('syncEstado');
+        if (el) el.innerText = msg;
+    }
+
+    async function sincronizarVendas() {
+        if (!SHEETS_URL) { mostrarEstadoSync('Folha não configurada'); return; }
+        const pendentes = vendas.filter(v => !v.sync);
+        if (pendentes.length === 0) { mostrarEstadoSync('Tudo sincronizado ✔'); return; }
+        if (!navigator.onLine) { mostrarEstadoSync(pendentes.length + ' por enviar (sem rede)'); return; }
+
+        pendentes.forEach(v => {
+            if (!v.id) v.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        });
+        localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
+
+        // Nomes das colunas da folha: evento, local, dataEvento
+        const payload = pendentes.map(v => Object.assign({}, v, {
+            evento: v.nomeEvento || '',
+            local: v.localEvento || '',
+            dataEvento: v.dataEvento || ''
+        }));
+
+        try {
+            mostrarEstadoSync('A enviar ' + pendentes.length + '...');
+            const res = await fetch(SHEETS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+            const txt = await res.text();
+            if (!res.ok || txt.trim() !== 'ok') throw new Error(txt);
+            pendentes.forEach(v => v.sync = true);
+            localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
+            mostrarEstadoSync('Tudo sincronizado ✔');
+        } catch (e) {
+            let det = (e && e.message) ? e.message.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120) : 'desconhecido';
+            mostrarEstadoSync(pendentes.length + ' por enviar (erro: ' + det + ')');
+        }
+    }
+    window.addEventListener('online', sincronizarVendas);
+
     window.onload = function() {
         carregarDadosEvento();
         renderizarTabelasPrecos();
+        sincronizarVendas();
     };
 </script>
 
