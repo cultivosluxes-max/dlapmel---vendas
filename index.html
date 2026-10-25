@@ -1237,7 +1237,10 @@
                 document.getElementById('btnRevenda').classList.add('selected-revenda');
             }
         }
-        document.getElementById('dataEvento').value = localStorage.getItem('dlapmel_evento_data') || obterDataAtualFormatada();
+        // A data do evento é sempre a de hoje ao abrir a app (evita ficar presa num dia antigo)
+        const dataHojeTxt = obterDataAtualFormatada();
+        document.getElementById('dataEvento').value = dataHojeTxt;
+        localStorage.setItem('dlapmel_evento_data', dataHojeTxt);
         document.getElementById('nomeEvento').value = localStorage.getItem('dlapmel_evento_nome') || '';
         document.getElementById('localEvento').value = localStorage.getItem('dlapmel_evento_local') || '';
         atualizarBadgeModo();
@@ -1380,22 +1383,12 @@
 
     function normTexto(t) { return String(t || '').trim().toLowerCase(); }
 
-    // Dia do evento (campo "Data" do evento; se não for válido, hoje)
-    function diaEventoAuto() {
-        const el = document.getElementById('dataEvento');
-        const t = lerDataHora(el ? el.value : '');
-        return t ? t.y + '-' + pad2(t.m) + '-' + pad2(t.d) : isoDeData(new Date());
-    }
-
     // Uma única regra para TUDO no resumo (totais, quadros, pagamentos e histórico):
-    // - sem filtros: só o dia do evento
-    // - com local: esse local (todas as datas, ou a data escolhida)
-    // - data "*" = todas as datas
+    // local e/ou data escolhidos por si; sem escolha = todas as vendas
     function passaFiltro(v, modo) {
         const f = filtros[modo];
-        if (!f.local && !f.data) return diaDaVenda(v) === diaEventoAuto();
         if (f.local && normTexto(v.localEvento) !== normTexto(f.local)) return false;
-        if (f.data && f.data !== '*' && diaDaVenda(v) !== f.data) return false;
+        if (f.data && diaDaVenda(v) !== f.data) return false;
         return true;
     }
 
@@ -1412,7 +1405,7 @@
             // Datas possíveis: só as que têm vendas no local escolhido (se houver local)
             function calcular() {
                 const mapaLocais = {};
-                doModo.filter(v => !f.data || f.data === '*' || diaDaVenda(v) === f.data).forEach(v => {
+                doModo.filter(v => !f.data || diaDaVenda(v) === f.data).forEach(v => {
                     const l = String(v.localEvento || '').trim();
                     if (l && !mapaLocais[normTexto(l)]) mapaLocais[normTexto(l)] = l;
                 });
@@ -1426,7 +1419,7 @@
             let { mapaLocais, dias } = calcular();
             // Segurança: se uma escolha deixou de existir, volta a "todos"
             if (f.local && !mapaLocais[normTexto(f.local)]) { f.local = ''; ({ mapaLocais, dias } = calcular()); }
-            if (f.data && f.data !== '*' && !dias.includes(f.data)) { f.data = ''; ({ mapaLocais, dias } = calcular()); }
+            if (f.data && !dias.includes(f.data)) { f.data = ''; ({ mapaLocais, dias } = calcular()); }
 
             const locais = Object.values(mapaLocais).sort((a, b) => a.localeCompare(b, 'pt'));
 
@@ -1436,21 +1429,20 @@
             selLocal.value = f.local ? (mapaLocais[normTexto(f.local)] || '') : '';
 
             selData.innerHTML = '';
-            selData.add(new Option('Dia do evento (automático)', ''));
-            selData.add(new Option('Todas as datas', '*'));
+            selData.add(new Option('Todas as datas', ''));
             dias.forEach(d => selData.add(new Option(diaParaTexto(d), d)));
             selData.value = f.data;
         });
     }
 
     // Histórico: sem filtros mostra só o dia do evento; com filtros segue os filtros
-    function montarHistorico(modo, html, diaAuto) {
+    function montarHistorico(modo, html) {
         const f = filtros[modo];
         const nomeModo = modo === 'Feira' ? 'feira' : 'revenda';
         let nota, vazio;
         if (!f.local && !f.data) {
-            nota = 'Só o dia do evento (' + diaParaTexto(diaAuto) + '). Use os filtros para ver outros dias.';
-            vazio = 'Nenhuma venda em ' + nomeModo + ' registada em ' + diaParaTexto(diaAuto) + '.';
+            nota = 'Todas as vendas registadas. Use os filtros para escolher um local ou um dia.';
+            vazio = 'Nenhuma venda em ' + nomeModo + ' registada.';
         } else {
             nota = 'De acordo com os filtros escolhidos.';
             vazio = 'Nenhuma venda em ' + nomeModo + ' com estes filtros.';
@@ -1589,7 +1581,7 @@
         const elemento = document.getElementById(tipo === 'feira' ? 'conteudoPDF_feira' : 'conteudoPDF_revenda');
         const nomeEvento = document.getElementById('nomeEvento').value.trim().replace(/[^a-zA-Z0-9]/g, '_') || tipo;
         const sufixoLocal = filtros[modo].local ? '_' + filtros[modo].local.replace(/[^a-zA-Z0-9]/g, '_') : '';
-        const nomeFicheiro = `Resumo_${tipo.toUpperCase()}_DLAPMEL_${nomeEvento}_${(filtros[modo].data === '*' ? 'todas_as_datas' : (filtros[modo].data || diaEventoAuto()))}${sufixoLocal}.pdf`;
+        const nomeFicheiro = `Resumo_${tipo.toUpperCase()}_DLAPMEL_${nomeEvento}_${filtros[modo].data || 'todas_as_datas'}${sufixoLocal}.pdf`;
 
         const opcoes = {
             margin:       10,
@@ -1652,14 +1644,13 @@
         let historicoFeiraHtml = '';
         let historicoRevendaHtml = '';
 
-        const diaAuto = diaEventoAuto();
-
-        const meta = { Feira: { eventos: new Set(), locais: new Set(), dias: new Set() }, Revenda: { eventos: new Set(), locais: new Set(), dias: new Set() } };
+        const meta = { Feira: { n: 0, eventos: new Set(), locais: new Set(), dias: new Set() }, Revenda: { n: 0, eventos: new Set(), locais: new Set(), dias: new Set() } };
 
         vendas.forEach((v) => {
             let isRevenda = v.modoOperacao === 'Revenda';
             const modoV = isRevenda ? 'Revenda' : 'Feira';
             if (!passaFiltro(v, modoV)) return;
+            meta[modoV].n++;
             if (v.nomeEvento) meta[modoV].eventos.add(v.nomeEvento);
             if (v.localEvento) meta[modoV].locais.add(v.localEvento);
             if (diaDaVenda(v)) meta[modoV].dias.add(diaDaVenda(v));
@@ -1720,8 +1711,8 @@
         // Cabeçalhos: com filtro ativo, mostram o que corresponde às vendas filtradas
         ['Feira', 'Revenda'].forEach(modo => {
             const f = filtros[modo];
-            if (!f.local && !f.data) return;
             const m = meta[modo];
+            if (!f.local && !f.data && m.n === 0) return; // sem filtros e sem vendas: mantém os dados do evento atual
             const dias = [...m.dias].sort();
             const textoDias = dias.length === 0 ? '-' : (dias.length === 1 ? diaParaTexto(dias[0]) : diaParaTexto(dias[0]) + ' a ' + diaParaTexto(dias[dias.length - 1]));
             document.getElementById('resumo' + modo + 'Nome').innerHTML = '<b>' + (modo === 'Feira' ? 'Evento' : 'Cliente') + ':</b> ' + ([...m.eventos].join(', ') || '-');
@@ -1808,11 +1799,11 @@
 
         document.getElementById('totalFaturadoFeira').innerText = formatarEuro1Casa(faturacaoFeira);
         document.getElementById('totalDescontosFeira').innerText = formatarEuro1Casa(descontoFeira);
-        document.getElementById('historicoVendasFeira').innerHTML = montarHistorico('Feira', historicoFeiraHtml, diaAuto);
+        document.getElementById('historicoVendasFeira').innerHTML = montarHistorico('Feira', historicoFeiraHtml);
 
         document.getElementById('totalFaturadoRevenda').innerText = formatarEuro1Casa(faturacaoRevenda);
         document.getElementById('totalDescontosRevenda').innerText = formatarEuro1Casa(descontoRevenda);
-        document.getElementById('historicoVendasRevenda').innerHTML = montarHistorico('Revenda', historicoRevendaHtml, diaAuto);
+        document.getElementById('historicoVendasRevenda').innerHTML = montarHistorico('Revenda', historicoRevendaHtml);
     }
 
 
