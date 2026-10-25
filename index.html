@@ -268,6 +268,23 @@
             min-height: 52px;
         }
         
+        .filtro-resumo {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #bc6c25;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+            background: #fff;
+            color: #283618;
+        }
+        .sync-export-btn {
+            background-color: #fefae0;
+            color: #283618;
+            border: 1px solid #dda15e;
+        }
+        .sync-export-btn:hover { background-color: #f3e9c0; }
+
         .pdf-export-btn {
             background-color: #283618;
             color: white;
@@ -574,7 +591,20 @@
     <div id="resumoFeiraTab" class="tab-content">
         <h3>📊 Resumo de Vendas em Feiras</h3>
 
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <div style="flex:1;min-width:0;">
+                <label style="font-size:12px;">📍 Local:</label>
+                <select id="filtroLocalFeira" class="filtro-resumo" onchange="mudarFiltro('Feira')"></select>
+            </div>
+            <div style="flex:1;min-width:0;">
+                <label style="font-size:12px;">📅 Data:</label>
+                <select id="filtroDataFeira" class="filtro-resumo" onchange="mudarFiltro('Feira')"></select>
+            </div>
+        </div>
+        <button type="button" class="export-btn-action sync-export-btn" style="min-height:36px;padding:6px;margin-bottom:12px;width:100%;flex:none;" onclick="limparFiltros('Feira')">✖ Limpar filtros</button>
+
         <div class="export-actions-grid">
+            <button type="button" class="export-btn-action sync-export-btn" onclick="atualizarDaFolha()">☁️ Sincronizar com a Folha</button>
             <button type="button" class="export-btn-action pdf-export-btn" onclick="abrirPDF('feira')">📄 Abrir Resumo PDF</button>
         </div>
 
@@ -682,7 +712,20 @@
     <div id="resumoRevendaTab" class="tab-content">
         <h3>🤝 Resumo de Vendas em Revenda</h3>
 
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <div style="flex:1;min-width:0;">
+                <label style="font-size:12px;">📍 Local:</label>
+                <select id="filtroLocalRevenda" class="filtro-resumo" onchange="mudarFiltro('Revenda')"></select>
+            </div>
+            <div style="flex:1;min-width:0;">
+                <label style="font-size:12px;">📅 Data:</label>
+                <select id="filtroDataRevenda" class="filtro-resumo" onchange="mudarFiltro('Revenda')"></select>
+            </div>
+        </div>
+        <button type="button" class="export-btn-action sync-export-btn" style="min-height:36px;padding:6px;margin-bottom:12px;width:100%;flex:none;" onclick="limparFiltros('Revenda')">✖ Limpar filtros</button>
+
         <div class="export-actions-grid">
+            <button type="button" class="export-btn-action sync-export-btn" onclick="atualizarDaFolha()">☁️ Sincronizar com a Folha</button>
             <button type="button" class="export-btn-action pdf-export-btn" onclick="abrirPDF('revenda')">📄 Abrir Resumo PDF</button>
         </div>
 
@@ -790,6 +833,23 @@
         <button class="tab-btn" style="flex:none;padding:8px 12px;" onclick="sincronizarVendas()">☁️ Sincronizar</button>
     </div>
 </div>
+
+    <div id="pdfDiaModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+        <div style="background:#fff;border-radius:12px;padding:18px;width:100%;max-width:340px;box-sizing:border-box;">
+            <h3 style="margin:0 0 4px 0;color:#bc6c25;text-align:center;">Resumo de que dia?</h3>
+            <p style="margin:0 0 12px 0;font-size:12px;color:#666;text-align:center;">O filtro de local escolhido no resumo mantém-se.</p>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                <button type="button" class="option-btn" style="padding:14px;" onclick="escolherDiaPDF('hoje')">Hoje (<span id="pdfDiaHojeTxt"></span>)</button>
+                <button type="button" class="option-btn" style="padding:14px;" onclick="escolherDiaPDF('ontem')">Ontem (<span id="pdfDiaOntemTxt"></span>)</button>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <input type="date" id="pdfDiaOutro" style="flex:1;padding:10px;border:2px solid #bc6c25;border-radius:8px;font-size:16px;box-sizing:border-box;">
+                    <button type="button" class="option-btn" style="flex:none;min-width:0;padding:12px 14px;" onclick="escolherDiaPDF('outro')">OK</button>
+                </div>
+                <button type="button" class="option-btn" style="padding:14px;" onclick="escolherDiaPDF('ecra')">Usar os filtros do ecrã</button>
+                <button type="button" class="option-btn" style="border-color:#999;color:#555;" onclick="fecharModalPDF()">Cancelar</button>
+            </div>
+        </div>
+    </div>
 
 <script>
     const tiposMel = ['Multifloral', 'Rosmaninho', 'Eucalipto', 'Laranjeiro', 'Castanheiro', 'Urze'];
@@ -969,6 +1029,15 @@
         elemento.classList.add('active');
 
         atualizarPrecoVenda();
+    }
+
+    // Depois de cada venda, o método de pagamento volta a "Dinheiro"
+    function reporPagamentoDinheiro() {
+        estadoAtual.pagamento = 'Dinheiro';
+        document.getElementById('pagamento').value = 'Dinheiro';
+        document.querySelectorAll('button[onclick^="selecionarOpcaoPagamento"]').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('onclick').indexOf("'Dinheiro'") !== -1);
+        });
     }
 
     function selecionarOpcaoPagamento(valor, elemento) {
@@ -1259,6 +1328,104 @@
         document.getElementById('cartTotal').innerText = formatarEuro1Casa(totalFinal);
     }
 
+
+    // ===== Auxiliares: IDs legíveis e datas =====
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    function prefixoIdDeData(d) {
+        return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '-' +
+               pad2(d.getHours()) + pad2(d.getMinutes()) + pad2(d.getSeconds());
+    }
+
+    // Extrai data/hora de textos como "23/10/2026, 14:32:10"
+    function lerDataHora(txt) {
+        const m = String(txt || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\D+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+        if (!m) return null;
+        return { d: +m[1], m: +m[2], y: +m[3], hh: +(m[4] || 0), mm: +(m[5] || 0), ss: +(m[6] || 0) };
+    }
+
+    function prefixoIdDeTexto(txt) {
+        const t = lerDataHora(txt);
+        if (!t) return 'SEMDATA-' + Date.now().toString(36);
+        return t.y + pad2(t.m) + pad2(t.d) + '-' + pad2(t.hh) + pad2(t.mm) + pad2(t.ss);
+    }
+
+    // Devolve um ID do tipo 20261023-143215-01 que ainda não exista
+    function idUnico(prefixo) {
+        let n = 1, id;
+        do { id = prefixo + '-' + pad2(n); n++; } while (vendas.some(v => v.id === id));
+        return id;
+    }
+
+    // Dia da venda no formato AAAA-MM-DD
+    function diaDaVenda(v) {
+        const t = lerDataHora(v.dataHora);
+        return t ? t.y + '-' + pad2(t.m) + '-' + pad2(t.d) : '';
+    }
+
+    function diaParaTexto(iso) {
+        const [y, m, d] = iso.split('-');
+        return d + '/' + m + '/' + y;
+    }
+
+    function isoDeData(d) {
+        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+    }
+
+    // Filtros dos resumos (local e/ou data), um por modo
+    let filtros = { Feira: { local: '', data: '' }, Revenda: { local: '', data: '' } };
+
+    function normTexto(t) { return String(t || '').trim().toLowerCase(); }
+
+    function passaFiltro(v, modo) {
+        const f = filtros[modo];
+        if (f.local && normTexto(v.localEvento) !== normTexto(f.local)) return false;
+        if (f.data && diaDaVenda(v) !== f.data) return false;
+        return true;
+    }
+
+    function popularFiltros() {
+        ['Feira', 'Revenda'].forEach(modo => {
+            const doModo = vendas.filter(v => (v.modoOperacao === 'Revenda') === (modo === 'Revenda'));
+
+            const mapaLocais = {};
+            doModo.forEach(v => {
+                const l = String(v.localEvento || '').trim();
+                if (l && !mapaLocais[normTexto(l)]) mapaLocais[normTexto(l)] = l;
+            });
+            const locais = Object.values(mapaLocais).sort((a, b) => a.localeCompare(b, 'pt'));
+            const dias = [...new Set(doModo.map(diaDaVenda).filter(Boolean))].sort().reverse();
+
+            const selLocal = document.getElementById('filtroLocal' + modo);
+            const selData = document.getElementById('filtroData' + modo);
+            if (!selLocal || !selData) return;
+
+            if (filtros[modo].local && !mapaLocais[normTexto(filtros[modo].local)]) filtros[modo].local = '';
+            if (filtros[modo].data && !dias.includes(filtros[modo].data)) filtros[modo].data = '';
+
+            selLocal.innerHTML = '';
+            selLocal.add(new Option('Todos os locais', ''));
+            locais.forEach(l => selLocal.add(new Option(l, l)));
+            selLocal.value = filtros[modo].local ? (mapaLocais[normTexto(filtros[modo].local)] || '') : '';
+
+            selData.innerHTML = '';
+            selData.add(new Option('Todas as datas', ''));
+            dias.forEach(d => selData.add(new Option(diaParaTexto(d), d)));
+            selData.value = filtros[modo].data;
+        });
+    }
+
+    function mudarFiltro(modo) {
+        filtros[modo].local = document.getElementById('filtroLocal' + modo).value;
+        filtros[modo].data = document.getElementById('filtroData' + modo).value;
+        atualizarResumos();
+    }
+
+    function limparFiltros(modo) {
+        filtros[modo] = { local: '', data: '' };
+        atualizarResumos();
+    }
+
     function registarVendaFinal() {
         if (carrinho.length === 0) {
             alert('A lista da pré-venda está vazia! Adicione pelo menos um produto.');
@@ -1274,7 +1441,9 @@
         
         if (!confirmar) return;
 
-        const dataHora = new Date().toLocaleString('pt-PT');
+        const agora = new Date();
+        const dataHora = agora.toLocaleString('pt-PT');
+        const prefixoVenda = prefixoIdDeData(agora);
         const pagamento = estadoAtual.pagamento;
         const nomeEvento = document.getElementById('nomeEvento').value.trim();
         const localEvento = document.getElementById('localEvento').value.trim();
@@ -1286,6 +1455,7 @@
             let totalItemComDesconto = item.subtotal * fatorDesconto;
             let descontoItem = item.subtotal - totalItemComDesconto;
             vendas.push({
+                id: idUnico(prefixoVenda),
                 dataHora,
                 modoOperacao: modoOperacao || 'Feira',
                 nomeEvento,
@@ -1307,6 +1477,7 @@
         localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
         sincronizarVendas();
         
+        reporPagamentoDinheiro();
         carrinho = [];
         document.getElementById('descontoCarrinho').value = "0.0";
         renderizarCarrinho();
@@ -1315,12 +1486,56 @@
         alert('Venda registada com sucesso!');
     }
 
-    // Geração de PDF com Destaque para o Local do Evento
+    // ===== PDF: pergunta primeiro qual o dia =====
+    let tipoPDFPendente = null;
+
     function abrirPDF(tipo) {
+        tipoPDFPendente = tipo;
+        const hoje = new Date();
+        const ontem = new Date(); ontem.setDate(ontem.getDate() - 1);
+        document.getElementById('pdfDiaHojeTxt').innerText = diaParaTexto(isoDeData(hoje));
+        document.getElementById('pdfDiaOntemTxt').innerText = diaParaTexto(isoDeData(ontem));
+        document.getElementById('pdfDiaOutro').value = isoDeData(hoje);
+        document.getElementById('pdfDiaModal').style.display = 'flex';
+    }
+
+    function fecharModalPDF() {
+        document.getElementById('pdfDiaModal').style.display = 'none';
+    }
+
+    function escolherDiaPDF(opcao) {
+        let d = new Date();
+        let iso = null;
+        if (opcao === 'hoje') iso = isoDeData(d);
+        else if (opcao === 'ontem') { d.setDate(d.getDate() - 1); iso = isoDeData(d); }
+        else if (opcao === 'outro') {
+            iso = document.getElementById('pdfDiaOutro').value;
+            if (!iso) { alert('Escolha uma data.'); return; }
+        }
+        // opcao 'ecra': usa os filtros que estão no ecrã tal como estão
+        fecharModalPDF();
+        gerarPDF(tipoPDFPendente, iso);
+    }
+
+    function gerarPDF(tipo, isoDia) {
+        const modo = tipo === 'feira' ? 'Feira' : 'Revenda';
+        const dataAnterior = filtros[modo].data;
+        if (isoDia) filtros[modo].data = isoDia;
+
+        const temVendas = vendas.some(v => ((v.modoOperacao === 'Revenda') === (modo === 'Revenda')) && passaFiltro(v, modo));
+        if (!temVendas) {
+            const f = filtros[modo];
+            filtros[modo].data = dataAnterior;
+            alert('Não há vendas de ' + modo + (f.local ? ' em ' + f.local : '') + (isoDia ? ' no dia ' + diaParaTexto(isoDia) : '') + '.');
+            return;
+        }
+
+        atualizarResumos();
+
         const elemento = document.getElementById(tipo === 'feira' ? 'conteudoPDF_feira' : 'conteudoPDF_revenda');
         const nomeEvento = document.getElementById('nomeEvento').value.trim().replace(/[^a-zA-Z0-9]/g, '_') || tipo;
-        const dataEvento = document.getElementById('dataEvento').value.trim().replace(/[^a-zA-Z0-9]/g, '_') || 'Data';
-        const nomeFicheiro = `Resumo_${tipo.toUpperCase()}_DLAPMEL_${nomeEvento}_${dataEvento}.pdf`;
+        const sufixoLocal = filtros[modo].local ? '_' + filtros[modo].local.replace(/[^a-zA-Z0-9]/g, '_') : '';
+        const nomeFicheiro = `Resumo_${tipo.toUpperCase()}_DLAPMEL_${nomeEvento}_${filtros[modo].data || 'todas_as_datas'}${sufixoLocal}.pdf`;
 
         const opcoes = {
             margin:       10,
@@ -1330,12 +1545,19 @@
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
+        const repor = function() { filtros[modo].data = dataAnterior; atualizarResumos(); };
+
         html2pdf().set(opcoes).from(elemento).outputPdf('bloburl').then(function(pdfUrl) {
+            repor();
             window.open(pdfUrl, '_blank');
+        }).catch(function() {
+            repor();
+            alert('Não foi possível gerar o PDF.');
         });
     }
 
     function atualizarResumos() {
+        popularFiltros();
         const nomeEv = document.getElementById('nomeEvento').value || '-';
         const localEv = document.getElementById('localEvento').value || '-';
         const dataEv = document.getElementById('dataEvento').value || '-';
@@ -1376,8 +1598,15 @@
         let historicoFeiraHtml = '';
         let historicoRevendaHtml = '';
 
+        const meta = { Feira: { eventos: new Set(), locais: new Set(), dias: new Set() }, Revenda: { eventos: new Set(), locais: new Set(), dias: new Set() } };
+
         vendas.forEach((v) => {
             let isRevenda = v.modoOperacao === 'Revenda';
+            const modoV = isRevenda ? 'Revenda' : 'Feira';
+            if (!passaFiltro(v, modoV)) return;
+            if (v.nomeEvento) meta[modoV].eventos.add(v.nomeEvento);
+            if (v.localEvento) meta[modoV].locais.add(v.localEvento);
+            if (diaDaVenda(v)) meta[modoV].dias.add(diaDaVenda(v));
             let desc = v.tipoProduto === 'Mel' ? `${v.melTipo} (${v.melTamanho})` : v.nomeProduto;
             let infoDesc = v.desconto > 0 ? ` <small style="color:#bc6c25;">(Desc: ${formatarEuro1Casa(v.desconto)})</small>` : '';
             let infoLocal = v.localEvento ? ` | 📍 ${v.localEvento}` : '';
@@ -1420,6 +1649,18 @@
                 if (pagFeira[v.pagamento] !== undefined) pagFeira[v.pagamento] += v.totalVenda;
                 historicoFeiraHtml += itemHtml;
             }
+        });
+
+        // Cabeçalhos: com filtro ativo, mostram o que corresponde às vendas filtradas
+        ['Feira', 'Revenda'].forEach(modo => {
+            const f = filtros[modo];
+            if (!f.local && !f.data) return;
+            const m = meta[modo];
+            const dias = [...m.dias].sort();
+            const textoDias = dias.length === 0 ? '-' : (dias.length === 1 ? diaParaTexto(dias[0]) : diaParaTexto(dias[0]) + ' a ' + diaParaTexto(dias[dias.length - 1]));
+            document.getElementById('resumo' + modo + 'Nome').innerHTML = '<b>' + (modo === 'Feira' ? 'Evento' : 'Cliente') + ':</b> ' + ([...m.eventos].join(', ') || '-');
+            document.getElementById('resumo' + modo + 'Local').innerHTML = '<b>Local:</b> ' + ([...m.locais].join(', ') || '-');
+            document.getElementById('resumo' + modo + 'Data').innerHTML = '<b>Data:</b> ' + textoDias;
         });
 
         // Preencher Matrizes de Mel
@@ -1525,7 +1766,7 @@
         if (!navigator.onLine) { mostrarEstadoSync(pendentes.length + ' por enviar (sem rede)'); return; }
 
         pendentes.forEach(v => {
-            if (!v.id) v.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+            if (!v.id) v.id = idUnico(prefixoIdDeTexto(v.dataHora));
         });
         localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
 
@@ -1554,6 +1795,55 @@
         }
     }
     window.addEventListener('online', sincronizarVendas);
+
+    // Envia o que está pendente e traz da folha as vendas que este telemóvel ainda não tem
+    async function atualizarDaFolha() {
+        if (!SHEETS_URL) { alert('A folha ainda não está configurada (SHEETS_URL).'); return; }
+        if (!navigator.onLine) { alert('Sem ligação à internet.'); return; }
+        await sincronizarVendas();
+        try {
+            const res = await fetch(SHEETS_URL + '?acao=vendas');
+            const dados = await res.json();
+            if (!dados || !dados.ok) throw new Error((dados && dados.erro) || 'resposta inválida');
+
+            const ids = new Set(vendas.map(v => v.id).filter(Boolean));
+            let novas = 0;
+            dados.vendas.forEach(r => {
+                if (!r.id || ids.has(r.id)) return;
+                vendas.push({
+                    id: r.id,
+                    dataHora: String(r.dataHora || ''),
+                    modoOperacao: r.modoOperacao || 'Feira',
+                    nomeEvento: r.evento || '',
+                    localEvento: r.local || '',
+                    dataEvento: String(r.dataEvento || ''),
+                    tipoProduto: r.tipoProduto || '',
+                    nomeProduto: r.nomeProduto || '',
+                    melTipo: r.melTipo || '',
+                    melTamanho: r.melTamanho || '',
+                    quantidade: Number(r.quantidade) || 0,
+                    precoUnitario: Number(r.precoUnitario) || 0,
+                    subtotal: Number(r.subtotal) || 0,
+                    desconto: Number(r.desconto) || 0,
+                    pagamento: r.pagamento || '',
+                    totalVenda: Number(r.totalVenda) || 0,
+                    sync: true
+                });
+                ids.add(r.id);
+                novas++;
+            });
+
+            if (novas > 0) {
+                const chave = v => { const t = lerDataHora(v.dataHora); return t ? new Date(t.y, t.m - 1, t.d, t.hh, t.mm, t.ss).getTime() : 0; };
+                vendas.sort((a, b) => chave(a) - chave(b));
+                localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
+                atualizarResumos();
+            }
+            alert(novas > 0 ? 'Atualizado: ' + novas + ' linha(s) de venda trazida(s) da folha.' : 'Já está tudo atualizado.');
+        } catch (e) {
+            alert('Não foi possível ler a folha (' + ((e && e.message) || 'erro') + '). Confirme que atualizou o script e criou uma nova versão da implementação.');
+        }
+    }
 
     window.onload = function() {
         carregarDadosEvento();
