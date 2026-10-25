@@ -1375,6 +1375,9 @@
     // Filtros dos resumos (local e/ou data), um por modo
     let filtros = { Feira: { local: '', data: '' }, Revenda: { local: '', data: '' } };
 
+    // Durante a geração do PDF sem filtros, o histórico mostra tudo (coerente com os totais)
+    let forcarHistoricoCompleto = false;
+
     function normTexto(t) { return String(t || '').trim().toLowerCase(); }
 
     function passaFiltro(v, modo) {
@@ -1413,6 +1416,25 @@
             dias.forEach(d => selData.add(new Option(diaParaTexto(d), d)));
             selData.value = filtros[modo].data;
         });
+    }
+
+    // Histórico: sem filtros mostra só o dia do evento; com filtros segue os filtros
+    function montarHistorico(modo, html, diaAuto) {
+        const f = filtros[modo];
+        const filtroAtivo = f.local || f.data;
+        const nomeModo = modo === 'Feira' ? 'feira' : 'revenda';
+        let nota, vazio;
+        if (filtroAtivo) {
+            nota = 'De acordo com os filtros escolhidos.';
+            vazio = 'Nenhuma venda em ' + nomeModo + ' com estes filtros.';
+        } else if (forcarHistoricoCompleto) {
+            nota = 'Todas as vendas.';
+            vazio = 'Nenhuma venda em ' + nomeModo + ' registada.';
+        } else {
+            nota = 'Só as vendas de ' + diaParaTexto(diaAuto) + ' (dia do evento). Use os filtros para ver outros dias.';
+            vazio = 'Nenhuma venda em ' + nomeModo + ' registada em ' + diaParaTexto(diaAuto) + '.';
+        }
+        return '<div style="font-size:11px;color:#888;margin-bottom:4px;">' + nota + '</div>' + (html || vazio);
     }
 
     function mudarFiltro(modo) {
@@ -1530,6 +1552,7 @@
             return;
         }
 
+        forcarHistoricoCompleto = !filtros[modo].local && !filtros[modo].data;
         atualizarResumos();
 
         const elemento = document.getElementById(tipo === 'feira' ? 'conteudoPDF_feira' : 'conteudoPDF_revenda');
@@ -1545,7 +1568,7 @@
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        const repor = function() { filtros[modo].data = dataAnterior; atualizarResumos(); };
+        const repor = function() { filtros[modo].data = dataAnterior; forcarHistoricoCompleto = false; atualizarResumos(); };
 
         html2pdf().set(opcoes).from(elemento).outputPdf('bloburl').then(function(pdfUrl) {
             repor();
@@ -1598,6 +1621,9 @@
         let historicoFeiraHtml = '';
         let historicoRevendaHtml = '';
 
+        const tEv = lerDataHora(document.getElementById('dataEvento').value);
+        const diaAuto = tEv ? tEv.y + '-' + pad2(tEv.m) + '-' + pad2(tEv.d) : isoDeData(new Date());
+
         const meta = { Feira: { eventos: new Set(), locais: new Set(), dias: new Set() }, Revenda: { eventos: new Set(), locais: new Set(), dias: new Set() } };
 
         vendas.forEach((v) => {
@@ -1607,6 +1633,8 @@
             if (v.nomeEvento) meta[modoV].eventos.add(v.nomeEvento);
             if (v.localEvento) meta[modoV].locais.add(v.localEvento);
             if (diaDaVenda(v)) meta[modoV].dias.add(diaDaVenda(v));
+            const filtroAtivoV = filtros[modoV].local || filtros[modoV].data;
+            const mostraNoHistorico = filtroAtivoV || forcarHistoricoCompleto || diaDaVenda(v) === diaAuto;
             let desc = v.tipoProduto === 'Mel' ? `${v.melTipo} (${v.melTamanho})` : v.nomeProduto;
             let infoDesc = v.desconto > 0 ? ` <small style="color:#bc6c25;">(Desc: ${formatarEuro1Casa(v.desconto)})</small>` : '';
             let infoLocal = v.localEvento ? ` | 📍 ${v.localEvento}` : '';
@@ -1629,7 +1657,7 @@
                     }
                 }
                 if (pagRevenda[v.pagamento] !== undefined) pagRevenda[v.pagamento] += v.totalVenda;
-                historicoRevendaHtml += itemHtml;
+                if (mostraNoHistorico) historicoRevendaHtml += itemHtml;
             } else {
                 faturacaoFeira += v.totalVenda;
                 descontoFeira += (v.desconto || 0);
@@ -1647,7 +1675,7 @@
                     }
                 }
                 if (pagFeira[v.pagamento] !== undefined) pagFeira[v.pagamento] += v.totalVenda;
-                historicoFeiraHtml += itemHtml;
+                if (mostraNoHistorico) historicoFeiraHtml += itemHtml;
             }
         });
 
@@ -1742,11 +1770,11 @@
 
         document.getElementById('totalFaturadoFeira').innerText = formatarEuro1Casa(faturacaoFeira);
         document.getElementById('totalDescontosFeira').innerText = formatarEuro1Casa(descontoFeira);
-        document.getElementById('historicoVendasFeira').innerHTML = historicoFeiraHtml || 'Nenhuma venda em feira registada.';
+        document.getElementById('historicoVendasFeira').innerHTML = montarHistorico('Feira', historicoFeiraHtml, diaAuto);
 
         document.getElementById('totalFaturadoRevenda').innerText = formatarEuro1Casa(faturacaoRevenda);
         document.getElementById('totalDescontosRevenda').innerText = formatarEuro1Casa(descontoRevenda);
-        document.getElementById('historicoVendasRevenda').innerHTML = historicoRevendaHtml || 'Nenhuma venda em revenda registada.';
+        document.getElementById('historicoVendasRevenda').innerHTML = montarHistorico('Revenda', historicoRevendaHtml, diaAuto);
     }
 
 
