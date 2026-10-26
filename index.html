@@ -328,6 +328,17 @@
         .cli-mini-btn { flex:none; padding:8px 10px; border:1px solid #bc6c25; border-radius:8px; background:#fefae0; color:#283618; font-weight:bold; cursor:pointer; font-size:13px; }
         #cfNome, #cfMorada, #cfLocalidade, #localEvento { text-transform: uppercase; }
         #nomeEvento[readonly] { background: #f1ede4; }
+        /* ===== Faturação ===== */
+        #faturaNome { text-transform: uppercase; }
+        .fat-card { border: 2px solid #dda15e; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; background: #fff; text-align: left; }
+        .fat-card.feita { border-color: #386641; background: #f4f8ec; }
+        .fat-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .fat-cod { font-weight: bold; font-size: 16px; color: #bc6c25; }
+        .fat-badge { font-size: 12px; padding: 3px 8px; border-radius: 12px; background: #fefae0; border: 1px solid #dda15e; white-space: nowrap; }
+        .fat-card.feita .fat-badge { background: #dff0d8; border-color: #386641; }
+        .fat-linha { font-size: 13px; margin: 3px 0; color: #283618; }
+        .fat-itens { margin: 6px 0; padding: 6px 8px; background: #faf6ee; border-radius: 6px; font-size: 13px; color: #283618; }
+        .fat-acoes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -347,6 +358,7 @@
         <div class="tab-menu-row">
             <button class="tab-btn resumo-btn" onclick="mudarAba('resumoFeiraTab', this)">📊 Resumo Feira</button>
             <button class="tab-btn resumo-btn" onclick="mudarAba('resumoRevendaTab', this)">🤝 Resumo Revenda</button>
+            <button class="tab-btn resumo-btn" id="tabBtnFaturacao" onclick="mudarAba('faturacaoTab', this)">🧾 Faturação</button>
         </div>
     </div>
 
@@ -510,6 +522,19 @@
                     <button type="button" class="option-btn" onclick="selecionarOpcaoPagamento('Transferência', this)">Transferência</button>
                 </div>
                 <input type="hidden" id="pagamento" value="Dinheiro">
+            </div>
+
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>🧾 Fatura?</label>
+                <div class="button-group">
+                    <button type="button" class="option-btn" id="btnFaturaSim" onclick="escolherFatura('Sim')">Sim</button>
+                    <button type="button" class="option-btn active" id="btnFaturaNao" onclick="escolherFatura('Não')">Não</button>
+                </div>
+                <div id="faturaFeiraCampos" style="display:none;margin-top:8px;">
+                    <input type="text" id="faturaNome" placeholder="Nome para a fatura (obrigatório)" autocomplete="off" oninput="if (!event.isComposing) limparCampo(this)" onblur="limparCampo(this)" style="margin-bottom:6px;">
+                    <input type="text" id="faturaNIF" inputmode="numeric" maxlength="9" placeholder="NIF (obrigatório)" autocomplete="off" oninput="this.value=this.value.replace(/\D/g,'')">
+                </div>
+                <div id="faturaRevendaInfo" class="cliente-card" style="margin:8px 0 0 0;"></div>
             </div>
 
             <button type="button" class="submit-btn" onclick="registarVendaFinal()">✅ Registar Venda Final</button>
@@ -859,7 +884,38 @@
             </div>
         </div>
     </div>
-    <div style="margin-top:14px;padding-top:10px;border-top:1px solid #dda15e;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#283618;">
+        <!-- ABA: FATURAÇÃO -->
+    <div id="faturacaoTab" class="tab-content">
+        <h3>🧾 Faturação</h3>
+        <div id="faturacaoResumo" style="font-size:13px;margin-bottom:10px;background:#fefae0;border-radius:8px;padding:8px 10px;"></div>
+
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <div style="flex:1;min-width:0;">
+                <label style="font-size:12px;">Estado:</label>
+                <select id="fatEstado" class="filtro-resumo" onchange="mudarFiltroFat()">
+                    <option value="pendente">Por faturar</option>
+                    <option value="feita">Já faturadas</option>
+                    <option value="todas">Todas</option>
+                </select>
+            </div>
+            <div style="flex:1;min-width:0;">
+                <label style="font-size:12px;">Tipo:</label>
+                <select id="fatTipo" class="filtro-resumo" onchange="mudarFiltroFat()">
+                    <option value="">Feira e Revenda</option>
+                    <option value="Feira">Feira</option>
+                    <option value="Revenda">Revenda</option>
+                </select>
+            </div>
+        </div>
+        <div style="margin-bottom:10px;">
+            <label style="font-size:12px;">📅 Data:</label>
+            <select id="fatData" class="filtro-resumo" onchange="mudarFiltroFat()"></select>
+        </div>
+
+        <div id="faturacaoLista"></div>
+    </div>
+
+<div style="margin-top:14px;padding-top:10px;border-top:1px solid #dda15e;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#283618;">
         <span id="syncEstado">—</span>
         <button class="tab-btn" style="flex:none;padding:8px 12px;" onclick="sincronizarVendas()">☁️ Sincronizar</button>
     </div>
@@ -1054,6 +1110,7 @@
         clienteSelId = ''; gravarClienteSel();
         atualizarBadgeModo();
         atualizarUIClientes();
+        reporFatura();
     }
 
     function atualizarBadgeModo() {
@@ -1353,7 +1410,7 @@
     }
 
     function mudarAba(abaId, elemento) {
-        if (abaId !== 'inicioTab') {
+        if (abaId !== 'inicioTab' && abaId !== 'faturacaoTab') {
             if (!modoOperacao) {
                 alert('⚠️ Por favor, selecione primeiro Feira ou Revenda na aba Início.');
                 mudarAba('inicioTab', document.getElementById('tabBtnInicio'));
@@ -1381,6 +1438,8 @@
         if (abaId === 'resumoFeiraTab' || abaId === 'resumoRevendaTab') {
             atualizarResumos();
         }
+        if (abaId === 'faturacaoTab') renderFaturacao();
+        if (abaId === 'vendasTab') atualizarCamposFatura();
     }
 
     function adicionarAoCarrinho() {
@@ -1632,6 +1691,9 @@
         if (desconto > subtotalVenda) desconto = subtotalVenda;
         let totalVendaFinal = subtotalVenda - desconto;
 
+        const faturaVenda = validarFatura();
+        if (!faturaVenda.ok) return;
+
         let confirmar = confirm(`O valor total desta venda é ${formatarEuro1Casa(totalVendaFinal)}. Deseja registar e concluir a venda?`);
         
         if (!confirmar) return;
@@ -1647,6 +1709,7 @@
         let fatorDesconto = subtotalVenda > 0 ? (totalVendaFinal / subtotalVenda) : 1;
 
         const clienteVenda = modoOperacao === 'Revenda' ? clientePorId(clienteSelId) : null;
+        const codigoFatura = faturaVenda.dados ? gerarCodigoFatura(modoOperacao === 'Revenda' ? 'Revenda' : 'Feira') : '';
         const totalCentimos = Math.round(totalVendaFinal * 100);
         let acumuladoCentimos = 0;
 
@@ -1666,6 +1729,12 @@
                 clienteId: clienteVenda ? clienteVenda.id : '',
                 clienteNIF: clienteVenda ? (clienteVenda.nif || '') : '',
                 tipoFeira: modoOperacao === 'Feira' ? tipoFeiraTexto() : '',
+                faturaCodigo: codigoFatura,
+                faturaNome: faturaVenda.dados ? faturaVenda.dados.nome : '',
+                faturaNIF: faturaVenda.dados ? faturaVenda.dados.nif : '',
+                faturaEmitida: false,
+                faturaEmitidaEm: '',
+                faturaSync: true,
                 tipoProduto: item.tipoProduto,
                 nomeProduto: item.nomeProduto,
                 melTipo: item.melTipo,
@@ -1683,12 +1752,13 @@
         sincronizarVendas();
         
         reporPagamentoDinheiro();
+        reporFatura();
         carrinho = [];
         document.getElementById('descontoCarrinho').value = "0.0";
         renderizarCarrinho();
         atualizarResumos();
 
-        alert('Venda registada com sucesso!');
+        alert('Venda registada com sucesso!' + (codigoFatura ? '\n🧾 Fatura pedida: ' + codigoFatura : ''));
     }
 
     // ===== PDF: pergunta primeiro qual o dia =====
@@ -1818,7 +1888,7 @@
             let desc = v.tipoProduto === 'Mel' ? `${v.melTipo} (${v.melTamanho})` : v.nomeProduto;
             let infoDesc = v.desconto > 0 ? ` <small style="color:#bc6c25;">(Desc: ${formatarEuro1Casa(v.desconto)})</small>` : '';
             let infoLocal = v.localEvento ? ` | 📍 ${paraMaiusculas(v.localEvento)}` : '';
-            let itemHtml = `<div class="history-item"><b>${v.dataHora}</b> - ${v.quantidade}x ${desc} | ${formatarEuro1Casa(v.totalVenda)}${infoDesc} (${v.pagamento})${infoLocal}</div>`;
+            let itemHtml = `<div class="history-item"><b>${v.dataHora}</b> - ${v.quantidade}x ${desc} | ${formatarEuro1Casa(v.totalVenda)}${infoDesc} (${v.pagamento})${infoLocal}${v.faturaCodigo ? ' | 🧾 ' + escaparHtml(v.faturaCodigo) : ''}</div>`;
 
             if (isRevenda) {
                 faturacaoRevenda += v.totalVenda;
@@ -1972,7 +2042,7 @@
 
     // ===== Sincronização com Google Sheets (Apps Script) =====
     // Cole aqui o URL da implementação web do Apps Script (termina em /exec)
-    const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxtRqYC7O1nY0b_mKfTZECtZSuohfyvjCRY9QXuiKEsI5AaqH9yoFnhrgKhM2bNQlA/exec';
+    const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx7ZBATj9DNBSMJw3i34yTFBStZBEjDRe1HSsS5BrCLEOJOKPS5keH1fRtfKe9Wfzrx/exec';
 
     function mostrarEstadoSync(msg) {
         const el = document.getElementById('syncEstado');
@@ -1994,7 +2064,8 @@
         const payload = pendentes.map(v => Object.assign({}, v, {
             evento: v.nomeEvento || '',
             local: v.localEvento || '',
-            dataEvento: v.dataEvento || ''
+            dataEvento: v.dataEvento || '',
+            faturaEmitida: v.faturaEmitida ? 'SIM' : ''
         }));
 
         try {
@@ -2006,7 +2077,7 @@
             });
             const txt = await res.text();
             if (!res.ok || txt.trim() !== 'ok') throw new Error(txt);
-            pendentes.forEach(v => v.sync = true);
+            pendentes.forEach(v => { v.sync = true; v.faturaSync = true; });
             localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
             mostrarEstadoSync('Tudo sincronizado ✔');
         } catch (e) {
@@ -2015,6 +2086,7 @@
         }
     }
     window.addEventListener('online', sincronizarVendas);
+    window.addEventListener('online', function () { sincronizarFaturas(); });
 
     // Envia o que está pendente e traz da folha as vendas que este telemóvel ainda não tem
     async function atualizarDaFolha() {
@@ -2023,6 +2095,7 @@
         await trazerClientesDaFolha();
         await sincronizarClientes();
         await sincronizarVendas();
+        await sincronizarFaturas();
         try {
             const res = await fetch(SHEETS_URL + '?acao=vendas');
             const dados = await res.json();
@@ -2030,8 +2103,22 @@
 
             const ids = new Set(vendas.map(v => v.id).filter(Boolean));
             let novas = 0;
+            let atualizadas = 0;
+            const porId = new Map(vendas.map(v => [v.id, v]));
             dados.vendas.forEach(r => {
-                if (!r.id || ids.has(r.id)) return;
+                if (r.id && ids.has(r.id)) {
+                    // linha já existente: aceita o estado "faturada" mais recente
+                    const l = porId.get(r.id);
+                    const remoto = String(r.faturaEmitidaEm || '');
+                    if (l && l.faturaCodigo && remoto > String(l.faturaEmitidaEm || '')) {
+                        l.faturaEmitida = String(r.faturaEmitida).toUpperCase() === 'SIM';
+                        l.faturaEmitidaEm = remoto;
+                        l.faturaSync = true;
+                        atualizadas++;
+                    }
+                    return;
+                }
+                if (!r.id) return;
                 vendas.push({
                     id: r.id,
                     dataHora: String(r.dataHora || ''),
@@ -2042,6 +2129,12 @@
                     clienteId: String(r.clienteId || ''),
                     clienteNIF: String(r.clienteNIF || ''),
                     tipoFeira: String(r.tipoFeira || ''),
+                    faturaCodigo: String(r.faturaCodigo || ''),
+                    faturaNome: String(r.faturaNome || ''),
+                    faturaNIF: String(r.faturaNIF || ''),
+                    faturaEmitida: String(r.faturaEmitida).toUpperCase() === 'SIM',
+                    faturaEmitidaEm: String(r.faturaEmitidaEm || ''),
+                    faturaSync: true,
                     tipoProduto: r.tipoProduto || '',
                     nomeProduto: r.nomeProduto || '',
                     melTipo: r.melTipo || '',
@@ -2058,13 +2151,13 @@
                 novas++;
             });
 
-            if (novas > 0) {
+            if (novas > 0 || atualizadas > 0) {
                 const chave = v => { const t = lerDataHora(v.dataHora); return t ? new Date(t.y, t.m - 1, t.d, t.hh, t.mm, t.ss).getTime() : 0; };
                 vendas.sort((a, b) => chave(a) - chave(b));
                 localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
                 atualizarResumos();
             }
-            alert(novas > 0 ? 'Atualizado: ' + novas + ' linha(s) de venda trazida(s) da folha.' : 'Já está tudo atualizado.');
+            alert((novas > 0 || atualizadas > 0) ? 'Atualizado: ' + novas + ' linha(s) de venda nova(s) e ' + atualizadas + ' fatura(s) com estado atualizado.' : 'Já está tudo atualizado.');
         } catch (e) {
             alert('Não foi possível ler a folha (' + ((e && e.message) || 'erro') + '). Confirme que atualizou o script e criou uma nova versão da implementação.');
         }
@@ -2313,6 +2406,7 @@
         if (!id || id === clienteSelId) escolherCliente(c.id); else atualizarCartaoCliente();
         renderListaClientes();
         sincronizarClientes();
+        atualizarCamposFatura();
         if (seguir === 'avancar') avancarParaVendas();
     }
 
@@ -2415,12 +2509,237 @@
         if (caixa && !caixa.contains(e.target)) esconderSugestoes();
     });
 
+
+    // ===== Faturação =====
+    let faturaEscolha = 'Não';
+    let filtroFat = { estado: 'pendente', tipo: '', data: '' };
+
+    function escolherFatura(v) {
+        faturaEscolha = v;
+        document.getElementById('btnFaturaSim').classList.toggle('active', v === 'Sim');
+        document.getElementById('btnFaturaNao').classList.toggle('active', v === 'Não');
+        atualizarCamposFatura();
+    }
+
+    function atualizarCamposFatura() {
+        const campos = document.getElementById('faturaFeiraCampos');
+        const info = document.getElementById('faturaRevendaInfo');
+        if (!campos || !info) return;
+        const sim = faturaEscolha === 'Sim';
+        const revenda = modoOperacao === 'Revenda';
+        campos.style.display = (sim && !revenda) ? 'block' : 'none';
+        if (sim && revenda) {
+            const c = clientePorId(clienteSelId);
+            let html;
+            if (!c) html = 'Cliente não escolhido.';
+            else if (c.nif && nifValido(c.nif)) html = '<b>' + escaparHtml(c.nome) + '</b><br>NIF ' + escaparHtml(c.nif) + ' (dados da ficha do cliente)';
+            else html = '<b>' + escaparHtml(c.nome) + '</b><br><span style="color:#c1121f;font-weight:bold;">Sem NIF válido na ficha.</span> <button type="button" class="cli-mini-btn" onclick="abrirFormCliente(\'' + escaparHtml(c.id) + '\', \'\')">✏️ Editar cliente</button>';
+            info.innerHTML = html;
+            info.style.display = 'block';
+        } else {
+            info.innerHTML = '';
+            info.style.display = 'none';
+        }
+    }
+
+    // Depois de cada venda a escolha volta a "Não" (vem sempre pré-selecionado)
+    function reporFatura() {
+        faturaEscolha = 'Não';
+        document.getElementById('btnFaturaSim').classList.remove('active');
+        document.getElementById('btnFaturaNao').classList.add('active');
+        document.getElementById('faturaNome').value = '';
+        document.getElementById('faturaNIF').value = '';
+        atualizarCamposFatura();
+    }
+
+    // Código próprio: FFEIRA 001, FFEIRA 002... e FREVENDA 001, FREVENDA 002...
+    function gerarCodigoFatura(modo) {
+        const prefixo = modo === 'Revenda' ? 'FREVENDA' : 'FFEIRA';
+        let max = 0;
+        vendas.forEach(v => {
+            const cod = String(v.faturaCodigo || '');
+            if (cod.indexOf(prefixo + ' ') === 0) {
+                const n = parseInt(cod.slice(prefixo.length + 1), 10);
+                if (n > max) max = n;
+            }
+        });
+        return prefixo + ' ' + String(max + 1).padStart(3, '0');
+    }
+
+    // Verifica a escolha de fatura antes de terminar a venda; devolve {ok, dados}
+    function validarFatura() {
+        if (faturaEscolha !== 'Sim') return { ok: true, dados: null };
+
+        if (modoOperacao === 'Revenda') {
+            const c = clientePorId(clienteSelId);
+            if (!c) { alert('Escolha o cliente na aba Início.'); return { ok: false }; }
+            if (!c.nif || !nifValido(c.nif)) {
+                alert('O cliente "' + c.nome + '" não tem um NIF válido na ficha. Edite o cliente antes de pedir fatura.');
+                atualizarCamposFatura();
+                return { ok: false };
+            }
+            return { ok: true, dados: { nome: c.nome, nif: c.nif } };
+        }
+
+        const nome = paraMaiusculas(document.getElementById('faturaNome').value.trim().replace(/\s+/g, ' '));
+        const nif = document.getElementById('faturaNIF').value.replace(/\s/g, '');
+        if (!nome) { alert('Para a fatura, escreva o nome do cliente.'); return { ok: false }; }
+        if (!nifValido(nif)) { alert('NIF inválido. Confirme os 9 dígitos.'); return { ok: false }; }
+        document.getElementById('faturaNome').value = nome;
+        return { ok: true, dados: { nome, nif } };
+    }
+
+    // --- Aba Faturação ---
+    function descricaoLinha(l) {
+        return l.tipoProduto === 'Mel' ? (l.melTipo + ' (' + l.melTamanho + ')') : (l.nomeProduto || 'Sem nome');
+    }
+
+    function agruparFaturas() {
+        const mapa = {};
+        vendas.forEach(v => {
+            if (!v.faturaCodigo) return;
+            if (!mapa[v.faturaCodigo]) mapa[v.faturaCodigo] = [];
+            mapa[v.faturaCodigo].push(v);
+        });
+        return Object.keys(mapa).map(codigo => {
+            const linhas = mapa[codigo];
+            const p = linhas[0];
+            return {
+                codigo, linhas,
+                modo: p.modoOperacao === 'Revenda' ? 'Revenda' : 'Feira',
+                dia: diaDaVenda(p),
+                local: paraMaiusculas(p.localEvento || ''),
+                nome: p.faturaNome || '', nif: p.faturaNIF || '',
+                pagamento: p.pagamento || '',
+                total: linhas.reduce((a, l) => a + (Number(l.totalVenda) || 0), 0),
+                emitida: linhas.every(l => l.faturaEmitida),
+                emitidaEm: linhas.reduce((m, l) => (l.faturaEmitidaEm && l.faturaEmitidaEm > m) ? l.faturaEmitidaEm : m, ''),
+                ts: momentoDaVenda(p)
+            };
+        });
+    }
+
+    function mudarFiltroFat() {
+        filtroFat.estado = document.getElementById('fatEstado').value;
+        filtroFat.tipo = document.getElementById('fatTipo').value;
+        filtroFat.data = document.getElementById('fatData').value;
+        renderFaturacao();
+    }
+
+    function renderFaturacao() {
+        const lista = document.getElementById('faturacaoLista');
+        if (!lista) return;
+        const grupos = agruparFaturas();
+        const pend = grupos.filter(g => !g.emitida);
+        const feitas = grupos.filter(g => g.emitida);
+        document.getElementById('faturacaoResumo').innerHTML =
+            '⏳ Por faturar: <b>' + pend.length + '</b> (' + formatarEuro1Casa(pend.reduce((a, g) => a + g.total, 0)) + ')' +
+            ' &nbsp;|&nbsp; ✔ Faturadas: <b>' + feitas.length + '</b>';
+
+        const dias = [...new Set(grupos.map(g => g.dia).filter(Boolean))].sort().reverse();
+        if (filtroFat.data && !dias.includes(filtroFat.data)) filtroFat.data = '';
+        const selData = document.getElementById('fatData');
+        selData.innerHTML = '';
+        selData.add(new Option('Todas as datas', ''));
+        dias.forEach(d => selData.add(new Option(diaParaTexto(d), d)));
+        selData.value = filtroFat.data;
+        document.getElementById('fatEstado').value = filtroFat.estado;
+        document.getElementById('fatTipo').value = filtroFat.tipo;
+
+        const visiveis = grupos.filter(g =>
+            (filtroFat.estado === 'todas' || (filtroFat.estado === 'pendente' ? !g.emitida : g.emitida)) &&
+            (!filtroFat.tipo || g.modo === filtroFat.tipo) &&
+            (!filtroFat.data || g.dia === filtroFat.data)
+        ).sort((a, b) => b.ts - a.ts || b.codigo.localeCompare(a.codigo));
+
+        if (visiveis.length === 0) {
+            lista.innerHTML = '<p style="color:#777;font-size:13px;text-align:center;">Nenhuma fatura ' +
+                (filtroFat.estado === 'pendente' ? 'por fazer' : (filtroFat.estado === 'feita' ? 'já feita' : '')) + ' com estes filtros.</p>';
+            return;
+        }
+        lista.innerHTML = visiveis.map(cartaoFatura).join('');
+    }
+
+    function cartaoFatura(g) {
+        const cod = escaparHtml(g.codigo);
+        const itens = g.linhas.map(l => escaparHtml(l.quantidade + 'x ' + descricaoLinha(l)) + ' — ' + formatarEuro1Casa(Number(l.totalVenda) || 0)).join('<br>');
+        let quando = '';
+        if (g.emitida && g.emitidaEm) {
+            const d = new Date(g.emitidaEm);
+            if (!isNaN(d)) quando = ' em ' + pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+        }
+        const acao = g.emitida
+            ? '<button type="button" class="cli-mini-btn" onclick="marcarFaturada(\'' + cod + '\', false)">↩ Desfazer</button>'
+            : '<button type="button" class="cli-mini-btn" style="background:#386641;color:#fff;border-color:#386641;" onclick="marcarFaturada(\'' + cod + '\', true)">☑ Marcar como faturada</button>';
+        return '<div class="fat-card' + (g.emitida ? ' feita' : '') + '">' +
+            '<div class="fat-top"><span class="fat-cod">' + cod + '</span><span class="fat-badge">' + (g.emitida ? '✔ Faturada' + escaparHtml(quando) : '⏳ Por faturar') + '</span></div>' +
+            '<div class="fat-linha">📅 <b>' + (g.dia ? diaParaTexto(g.dia) : '-') + '</b> &nbsp;📍 ' + escaparHtml(g.local || '-') + ' &nbsp;(' + g.modo + ')</div>' +
+            '<div class="fat-linha">👤 <b>' + escaparHtml(g.nome) + '</b> &nbsp;NIF <b>' + escaparHtml(g.nif) + '</b></div>' +
+            '<div class="fat-itens">' + itens + '</div>' +
+            '<div class="fat-linha">Total: <b>' + formatarEuro1Casa(g.total) + '</b> (' + escaparHtml(g.pagamento) + ')</div>' +
+            '<div class="fat-acoes">' + acao +
+            '<button type="button" class="cli-mini-btn" onclick="copiarFatura(\'' + cod + '\', \'nif\')">📋 NIF</button>' +
+            '<button type="button" class="cli-mini-btn" onclick="copiarFatura(\'' + cod + '\', \'nome\')">📋 Nome</button></div>' +
+            '</div>';
+    }
+
+    function marcarFaturada(codigo, estado) {
+        if (!estado && !confirm('Desfazer a marca de faturada em ' + codigo + '?')) return;
+        const agora = new Date().toISOString();
+        vendas.forEach(v => {
+            if (v.faturaCodigo === codigo) { v.faturaEmitida = estado; v.faturaEmitidaEm = agora; v.faturaSync = false; }
+        });
+        localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
+        renderFaturacao();
+        sincronizarFaturas();
+    }
+
+    function copiarFatura(codigo, campo) {
+        const l = vendas.find(v => v.faturaCodigo === codigo);
+        if (!l) return;
+        const txt = String(campo === 'nif' ? l.faturaNIF : l.faturaNome) || '';
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(txt).catch(() => copiarTextoAlternativo(txt));
+        } else {
+            copiarTextoAlternativo(txt);
+        }
+    }
+
+    function copiarTextoAlternativo(txt) {
+        const ta = document.createElement('textarea');
+        ta.value = txt;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (e) { /* ignora */ }
+        document.body.removeChild(ta);
+    }
+
+    // Estado "faturada" das vendas já enviadas para a folha
+    async function sincronizarFaturas() {
+        if (!SHEETS_URL || !navigator.onLine) return;
+        const pendentes = vendas.filter(v => v.faturaCodigo && v.sync && v.faturaSync === false);
+        if (pendentes.length === 0) return;
+        try {
+            const linhas = pendentes.map(v => ({ id: v.id, faturaEmitida: v.faturaEmitida ? 'SIM' : '', faturaEmitidaEm: v.faturaEmitidaEm || '' }));
+            const res = await fetch(SHEETS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ tipo: 'faturas', linhas })
+            });
+            const txt = await res.text();
+            if (!res.ok || txt.trim() !== 'ok') throw new Error(txt);
+            pendentes.forEach(v => v.faturaSync = true);
+            localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
+        } catch (e) { /* tenta outra vez mais tarde */ }
+    }
+
     window.onload = function() {
         maiusculasClientes();
         carregarDadosEvento();
         renderizarTabelasPrecos();
         sincronizarVendas();
         trazerClientesDaFolha().then(sincronizarClientes);
+        sincronizarFaturas();
     };
 </script>
 
