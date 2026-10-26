@@ -339,6 +339,9 @@
         .fat-linha { font-size: 13px; margin: 3px 0; color: #283618; }
         .fat-itens { margin: 6px 0; padding: 6px 8px; background: #faf6ee; border-radius: 6px; font-size: 13px; color: #283618; }
         .fat-acoes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .fat-card.anulada { border-color: #c1121f; background: #fdf0f0; }
+        .fat-card.anulada .fat-badge { background: #f8d7da; border-color: #c1121f; }
+        .fat-card.anulada .fat-itens { text-decoration: line-through; color: #777; }
     </style>
 </head>
 <body>
@@ -895,6 +898,7 @@
                 <select id="fatEstado" class="filtro-resumo" onchange="mudarFiltroFat()">
                     <option value="pendente">Por faturar</option>
                     <option value="feita">Já faturadas</option>
+                    <option value="anulada">Anuladas</option>
                     <option value="todas">Todas</option>
                 </select>
             </div>
@@ -1733,6 +1737,7 @@
                 faturaNome: faturaVenda.dados ? faturaVenda.dados.nome : '',
                 faturaNIF: faturaVenda.dados ? faturaVenda.dados.nif : '',
                 faturaEmitida: false,
+                faturaAnulada: false,
                 faturaEmitidaEm: '',
                 faturaSync: true,
                 tipoProduto: item.tipoProduto,
@@ -1888,7 +1893,7 @@
             let desc = v.tipoProduto === 'Mel' ? `${v.melTipo} (${v.melTamanho})` : v.nomeProduto;
             let infoDesc = v.desconto > 0 ? ` <small style="color:#bc6c25;">(Desc: ${formatarEuro1Casa(v.desconto)})</small>` : '';
             let infoLocal = v.localEvento ? ` | 📍 ${paraMaiusculas(v.localEvento)}` : '';
-            let itemHtml = `<div class="history-item"><b>${v.dataHora}</b> - ${v.quantidade}x ${desc} | ${formatarEuro1Casa(v.totalVenda)}${infoDesc} (${v.pagamento})${infoLocal}${v.faturaCodigo ? ' | 🧾 ' + escaparHtml(v.faturaCodigo) : ''}</div>`;
+            let itemHtml = `<div class="history-item"><b>${v.dataHora}</b> - ${v.quantidade}x ${desc} | ${formatarEuro1Casa(v.totalVenda)}${infoDesc} (${v.pagamento})${infoLocal}${v.faturaCodigo ? ' | 🧾 ' + escaparHtml(v.faturaCodigo) + (v.faturaAnulada ? ' (anulada)' : '') : ''}</div>`;
 
             if (isRevenda) {
                 faturacaoRevenda += v.totalVenda;
@@ -2042,7 +2047,7 @@
 
     // ===== Sincronização com Google Sheets (Apps Script) =====
     // Cole aqui o URL da implementação web do Apps Script (termina em /exec)
-    const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx7ZBATj9DNBSMJw3i34yTFBStZBEjDRe1HSsS5BrCLEOJOKPS5keH1fRtfKe9Wfzrx/exec';
+    const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyGvG8r3DG9kpZiiLcyNe16pRkARSM-09Rk3ruTUu9B1472rWs904CJtOQNwYG5bwQy/exec';
 
     function mostrarEstadoSync(msg) {
         const el = document.getElementById('syncEstado');
@@ -2065,7 +2070,8 @@
             evento: v.nomeEvento || '',
             local: v.localEvento || '',
             dataEvento: v.dataEvento || '',
-            faturaEmitida: v.faturaEmitida ? 'SIM' : ''
+            faturaEmitida: v.faturaEmitida ? 'SIM' : '',
+            faturaAnulada: v.faturaAnulada ? 'SIM' : ''
         }));
 
         try {
@@ -2112,6 +2118,7 @@
                     const remoto = String(r.faturaEmitidaEm || '');
                     if (l && l.faturaCodigo && remoto > String(l.faturaEmitidaEm || '')) {
                         l.faturaEmitida = String(r.faturaEmitida).toUpperCase() === 'SIM';
+                        l.faturaAnulada = String(r.faturaAnulada).toUpperCase() === 'SIM';
                         l.faturaEmitidaEm = remoto;
                         l.faturaSync = true;
                         atualizadas++;
@@ -2133,6 +2140,7 @@
                     faturaNome: String(r.faturaNome || ''),
                     faturaNIF: String(r.faturaNIF || ''),
                     faturaEmitida: String(r.faturaEmitida).toUpperCase() === 'SIM',
+                    faturaAnulada: String(r.faturaAnulada).toUpperCase() === 'SIM',
                     faturaEmitidaEm: String(r.faturaEmitidaEm || ''),
                     faturaSync: true,
                     tipoProduto: r.tipoProduto || '',
@@ -2612,7 +2620,8 @@
                 nome: p.faturaNome || '', nif: p.faturaNIF || '',
                 pagamento: p.pagamento || '',
                 total: linhas.reduce((a, l) => a + (Number(l.totalVenda) || 0), 0),
-                emitida: linhas.every(l => l.faturaEmitida),
+                emitida: linhas.every(l => l.faturaEmitida && !l.faturaAnulada),
+                anulada: linhas.every(l => l.faturaAnulada),
                 emitidaEm: linhas.reduce((m, l) => (l.faturaEmitidaEm && l.faturaEmitidaEm > m) ? l.faturaEmitidaEm : m, ''),
                 ts: momentoDaVenda(p)
             };
@@ -2630,11 +2639,14 @@
         const lista = document.getElementById('faturacaoLista');
         if (!lista) return;
         const grupos = agruparFaturas();
-        const pend = grupos.filter(g => !g.emitida);
-        const feitas = grupos.filter(g => g.emitida);
+        const estadoG = g => g.anulada ? 'anulada' : (g.emitida ? 'feita' : 'pendente');
+        const pend = grupos.filter(g => estadoG(g) === 'pendente');
+        const feitas = grupos.filter(g => estadoG(g) === 'feita');
+        const anuladas = grupos.filter(g => estadoG(g) === 'anulada');
         document.getElementById('faturacaoResumo').innerHTML =
             '⏳ Por faturar: <b>' + pend.length + '</b> (' + formatarEuro1Casa(pend.reduce((a, g) => a + g.total, 0)) + ')' +
-            ' &nbsp;|&nbsp; ✔ Faturadas: <b>' + feitas.length + '</b>';
+            ' &nbsp;|&nbsp; ✔ Faturadas: <b>' + feitas.length + '</b>' +
+            ' &nbsp;|&nbsp; 🚫 Anuladas: <b>' + anuladas.length + '</b>';
 
         const dias = [...new Set(grupos.map(g => g.dia).filter(Boolean))].sort().reverse();
         if (filtroFat.data && !dias.includes(filtroFat.data)) filtroFat.data = '';
@@ -2647,14 +2659,14 @@
         document.getElementById('fatTipo').value = filtroFat.tipo;
 
         const visiveis = grupos.filter(g =>
-            (filtroFat.estado === 'todas' || (filtroFat.estado === 'pendente' ? !g.emitida : g.emitida)) &&
+            (filtroFat.estado === 'todas' || estadoG(g) === filtroFat.estado) &&
             (!filtroFat.tipo || g.modo === filtroFat.tipo) &&
             (!filtroFat.data || g.dia === filtroFat.data)
         ).sort((a, b) => b.ts - a.ts || b.codigo.localeCompare(a.codigo));
 
         if (visiveis.length === 0) {
             lista.innerHTML = '<p style="color:#777;font-size:13px;text-align:center;">Nenhuma fatura ' +
-                (filtroFat.estado === 'pendente' ? 'por fazer' : (filtroFat.estado === 'feita' ? 'já feita' : '')) + ' com estes filtros.</p>';
+                (filtroFat.estado === 'pendente' ? 'por fazer' : (filtroFat.estado === 'feita' ? 'já feita' : (filtroFat.estado === 'anulada' ? 'anulada' : ''))) + ' com estes filtros.</p>';
             return;
         }
         lista.innerHTML = visiveis.map(cartaoFatura).join('');
@@ -2668,11 +2680,17 @@
             const d = new Date(g.emitidaEm);
             if (!isNaN(d)) quando = ' em ' + pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
         }
-        const acao = g.emitida
-            ? '<button type="button" class="cli-mini-btn" onclick="marcarFaturada(\'' + cod + '\', false)">↩ Desfazer</button>'
-            : '<button type="button" class="cli-mini-btn" style="background:#386641;color:#fff;border-color:#386641;" onclick="marcarFaturada(\'' + cod + '\', true)">☑ Marcar como faturada</button>';
-        return '<div class="fat-card' + (g.emitida ? ' feita' : '') + '">' +
-            '<div class="fat-top"><span class="fat-cod">' + cod + '</span><span class="fat-badge">' + (g.emitida ? '✔ Faturada' + escaparHtml(quando) : '⏳ Por faturar') + '</span></div>' +
+        let acao;
+        if (g.anulada) {
+            acao = '<button type="button" class="cli-mini-btn" onclick="anularFatura(\'' + cod + '\', false)">↩ Repor</button>';
+        } else if (g.emitida) {
+            acao = '<button type="button" class="cli-mini-btn" onclick="marcarFaturada(\'' + cod + '\', false)">↩ Desfazer</button>';
+        } else {
+            acao = '<button type="button" class="cli-mini-btn" style="background:#386641;color:#fff;border-color:#386641;" onclick="marcarFaturada(\'' + cod + '\', true)">☑ Marcar como faturada</button>' +
+                   '<button type="button" class="cli-mini-btn" style="background:#fff;color:#c1121f;border-color:#c1121f;" onclick="anularFatura(\'' + cod + '\', true)">🚫 Anular</button>';
+        }
+        return '<div class="fat-card' + (g.anulada ? ' anulada' : (g.emitida ? ' feita' : '')) + '">' +
+            '<div class="fat-top"><span class="fat-cod">' + cod + '</span><span class="fat-badge">' + (g.anulada ? '🚫 Anulada' : (g.emitida ? '✔ Faturada' + escaparHtml(quando) : '⏳ Por faturar')) + '</span></div>' +
             '<div class="fat-linha">📅 <b>' + (g.dia ? diaParaTexto(g.dia) : '-') + '</b> &nbsp;📍 ' + escaparHtml(g.local || '-') + ' &nbsp;(' + g.modo + ')</div>' +
             '<div class="fat-linha">👤 <b>' + escaparHtml(g.nome) + '</b> &nbsp;NIF <b>' + escaparHtml(g.nif) + '</b></div>' +
             '<div class="fat-itens">' + itens + '</div>' +
@@ -2687,7 +2705,19 @@
         if (!estado && !confirm('Desfazer a marca de faturada em ' + codigo + '?')) return;
         const agora = new Date().toISOString();
         vendas.forEach(v => {
-            if (v.faturaCodigo === codigo) { v.faturaEmitida = estado; v.faturaEmitidaEm = agora; v.faturaSync = false; }
+            if (v.faturaCodigo === codigo) { v.faturaEmitida = estado; v.faturaAnulada = false; v.faturaEmitidaEm = agora; v.faturaSync = false; }
+        });
+        localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
+        renderFaturacao();
+        sincronizarFaturas();
+    }
+
+    // Anular o pedido de fatura (a venda mantém-se; o código fica guardado e não volta a ser usado)
+    function anularFatura(codigo, anular) {
+        if (anular && !confirm('Anular o pedido de fatura ' + codigo + '? A venda mantém-se, mas deixa de aparecer em "Por faturar".')) return;
+        const agora = new Date().toISOString();
+        vendas.forEach(v => {
+            if (v.faturaCodigo === codigo) { v.faturaAnulada = anular; v.faturaEmitida = false; v.faturaEmitidaEm = agora; v.faturaSync = false; }
         });
         localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
         renderFaturacao();
@@ -2720,7 +2750,7 @@
         const pendentes = vendas.filter(v => v.faturaCodigo && v.sync && v.faturaSync === false);
         if (pendentes.length === 0) return;
         try {
-            const linhas = pendentes.map(v => ({ id: v.id, faturaEmitida: v.faturaEmitida ? 'SIM' : '', faturaEmitidaEm: v.faturaEmitidaEm || '' }));
+            const linhas = pendentes.map(v => ({ id: v.id, faturaEmitida: v.faturaEmitida ? 'SIM' : '', faturaEmitidaEm: v.faturaEmitidaEm || '', faturaAnulada: v.faturaAnulada ? 'SIM' : '' }));
             const res = await fetch(SHEETS_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
