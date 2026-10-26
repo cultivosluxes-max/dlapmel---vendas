@@ -2,789 +2,2761 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AgroControl - Registo de Fertirrigação</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts (Inter) -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DLAPMEL - Gestão de Vendas de Mel e Outros Produtos</title>
+    <!-- Biblioteca html2pdf para geração e visualização em PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fdf6ec; padding: 12px; margin: 0; color: #333; }
+        .container { max-width: 720px; margin: 0 auto; background: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
+        h2 { color: #bc6c25; text-align: center; margin-top: 0; }
+        
+        .tab-menu-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #dda15e;
+            padding-bottom: 8px;
         }
-        /* Estilo rigoroso de limites e bordas para tabelas */
-        .table-agri {
-            border-collapse: collapse !important;
+        .tab-menu-row {
+            display: flex;
+            gap: 6px;
             width: 100%;
         }
-        .table-agri th, .table-agri td {
-            border: 1px solid #cbd5e1 !important;
-            padding: 8px 6px;
+        .tab-btn {
+            flex: 1;
+            padding: 12px 4px;
             text-align: center;
-            font-size: 0.8125rem;
+            background: #fefae0;
+            border: 1px solid #dda15e;
+            font-weight: bold;
+            color: #283618;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: nowrap;
+            transition: 0.2s;
         }
-        .table-agri th {
-            background-color: #065f46;
-            color: #ffffff;
-            font-weight: 700;
+        .tab-btn.resumo-btn {
+            background: #e9edc9;
+            border-color: #283618;
+            font-size: 13px;
+            padding: 13px 4px;
         }
-        .keypad-btn {
+        .tab-btn.active {
+            background: #dda15e;
+            color: white;
+            border-color: #bc6c25;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        .tab-btn.resumo-btn.active {
+            background: #283618;
+            color: white;
+            border-color: #1a2410;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .form-group { margin-bottom: 15px; }
+        label { font-weight: bold; display: block; margin-bottom: 6px; color: #283618; font-size: 13px; }
+        
+        .row-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .row-group .form-group { flex: 1; margin-bottom: 0; }
+
+        .button-group { display: flex; flex-wrap: wrap; gap: 6px; }
+        .option-btn {
+            flex: 1;
+            min-width: 28%;
+            padding: 10px 4px;
+            border: 2px solid #dda15e;
+            background-color: #fff;
+            color: #283618;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            font-weight: 500;
+        }
+        .option-btn.active {
+            background-color: #dda15e;
+            color: white;
+            border-color: #bc6c25;
+            font-weight: bold;
+        }
+        
+        .select-type-btn {
+            flex: 1;
+            padding: 18px;
+            border: 2px solid #dda15e;
+            background-color: #fefae0;
+            color: #283618;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            font-weight: bold;
+        }
+        .select-type-btn.selected-feira {
+            background-color: #dda15e;
+            color: white;
+            border-color: #bc6c25;
+        }
+        .select-type-btn.selected-revenda {
+            background-color: #283618;
+            color: white;
+            border-color: #386641;
+        }
+
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 2px solid #bc6c25;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            background: #fffdf9;
+        }
+        
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .price-vertical-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            background: #fff;
+            border: 1px solid #dda15e;
+            border-radius: 6px;
+            padding: 4px;
+        }
+        .price-vertical-input {
+            width: 100% !important;
+            padding: 4px 0 !important;
+            font-size: 14px !important;
+            text-align: center !important;
+            border: none !important;
+            background: transparent !important;
+            font-weight: bold !important;
+        }
+        .price-buttons-row {
+            display: flex;
+            width: 100%;
+            gap: 2px;
+        }
+        .step-btn-vertical {
+            flex: 1;
+            background-color: #dda15e;
+            color: #283618;
+            border: none;
+            padding: 4px 0;
+            font-weight: bold;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .step-btn-vertical:active {
+            background-color: #bc6c25;
+            color: white;
+        }
+
+        .price-control-container {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            background: #fff;
+            border: 2px solid #bc6c25;
+            border-radius: 8px;
+            padding: 3px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .price-input {
+            flex: 1;
+            width: 100% !important;
+            padding: 6px 0 !important;
+            font-size: 16px !important;
+            text-align: center !important;
+            border: none !important;
+            background: transparent !important;
+            font-weight: bold !important;
+        }
+        .step-btn {
+            background-color: #dda15e;
+            color: #283618;
+            border: none;
+            width: 34px;
+            height: 34px;
+            font-weight: bold;
+            font-size: 18px;
+            border-radius: 6px;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 700;
-            font-size: 1.5rem;
-            background-color: #ffffff;
-            color: #1e293b;
-            border-radius: 0.75rem;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            border: 1px solid #cbd5e1;
             user-select: none;
-            height: 3.5rem;
-            transition: all 0.1s;
+            flex-shrink: 0;
         }
-        .keypad-btn:active {
-            background-color: #d1fae5;
-            transform: scale(0.96);
+        .step-btn:active {
+            background-color: #bc6c25;
+            color: white;
         }
-        .field-active {
-            border-color: #059669 !important;
-            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.25) !important;
-            background-color: #ecfdf5 !important;
+
+        .action-btn {
+            background-color: #dda15e;
+            color: #283618;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            font-size: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            margin-top: 10px;
         }
-        .table-container::-webkit-scrollbar {
-            height: 6px;
+        .action-btn:hover { background-color: #bc6c25; color: white; }
+
+        .submit-btn {
+            background-color: #283618;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            font-size: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            margin-top: 15px;
         }
-        .table-container::-webkit-scrollbar-thumb {
-            background-color: #cbd5e1;
-            border-radius: 4px;
+        .submit-btn:hover { background-color: #386641; }
+
+        .export-actions-grid {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
         }
+        .export-btn-action {
+            flex: 1;
+            padding: 12px 6px;
+            font-size: 13px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            text-align: center;
+            border: none;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            min-height: 52px;
+        }
+        
+        .filtro-resumo {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #bc6c25;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+            background: #fff;
+            color: #283618;
+        }
+        .sync-export-btn {
+            background-color: #fefae0;
+            color: #283618;
+            border: 1px solid #dda15e;
+        }
+        .sync-export-btn:hover { background-color: #f3e9c0; }
+
+        .pdf-export-btn {
+            background-color: #283618;
+            color: white;
+            border: 1px solid #dda15e;
+        }
+        .pdf-export-btn:hover { background-color: #386641; }
+
+        .summary-card { background: #fefae0; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 5px solid #bc6c25; }
+        .summary-card h4 { margin: 0 0 6px 0; color: #606c38; font-size: 13px; }
+        .summary-card p { margin: 0; font-size: 15px; font-weight: bold; color: #283618; }
+        
+        .price-table, .matrix-summary-table, .payment-summary-table, .cart-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px; }
+        .price-table th, .price-table td, .matrix-summary-table th, .matrix-summary-table td, .payment-summary-table th, .payment-summary-table td, .cart-table th, .cart-table td { border: 1px solid #dda15e; padding: 6px 2px; text-align: center; vertical-align: middle; }
+        .price-table th, .matrix-summary-table th, .payment-summary-table th, .cart-table th { background: #fefae0; color: #283618; font-weight: bold; }
+        .price-table td:first-child, .cart-table td:first-child { text-align: left; font-weight: bold; padding-left: 6px; }
+        
+        .history-list { font-size: 12px; color: #555; max-height: 220px; overflow-y: auto; margin-top: 5px; }
+        .history-item { padding: 6px 0; border-bottom: 1px solid #eee; }
+        
+        .section-divider { margin: 15px 0 10px 0; font-size: 13px; font-weight: bold; color: #bc6c25; border-bottom: 1px dashed #dda15e; padding-bottom: 4px; }
+        .cart-container { background: #fffaf0; border: 2px dashed #dda15e; padding: 12px; border-radius: 10px; margin-top: 15px; }
+        .remove-btn { background: #bc6c25; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+
+        .mode-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; margin-bottom: 10px; }
+        .mode-feira { background-color: #dda15e; color: #283618; }
+        .mode-revenda { background-color: #283618; color: #fff; }
+        /* ===== Clientes (Revenda) ===== */
+        .sugestoes { display:none; position:absolute; left:0; right:0; top:100%; margin-top:2px; background:#fff; border:2px solid #bc6c25; border-radius:8px; max-height:260px; overflow-y:auto; z-index:60; box-shadow:0 6px 16px rgba(0,0,0,0.18); text-align:left; }
+        .sug-item { padding:10px 12px; border-bottom:1px solid #eee; cursor:pointer; font-size:14px; color:#283618; }
+        .sug-item small { color:#777; }
+        .sug-item:last-child { border-bottom:none; }
+        .sug-novo { font-weight:bold; color:#386641; background:#f4f8ec; }
+        .cliente-card { display:none; background:#f4f8ec; border-left:5px solid #386641; border-radius:8px; padding:10px 12px; margin-bottom:12px; font-size:13px; color:#283618; text-align:left; line-height:1.5; }
+        .cli-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:flex-start; justify-content:center; padding:16px; overflow-y:auto; box-sizing:border-box; }
+        .cli-modal-box { background:#fff; border-radius:12px; padding:16px; width:100%; max-width:380px; box-sizing:border-box; margin:auto; }
+        input.cli-input { width:100%; padding:10px; box-sizing:border-box; border:2px solid #bc6c25; border-radius:8px; font-size:16px; font-weight:normal; text-align:left; background:#fffdf9; }
+        .cli-label { display:block; font-size:12px; margin:8px 0 3px; color:#283618; font-weight:bold; }
+        .cli-row { display:flex; gap:6px; align-items:center; padding:8px 0; border-bottom:1px solid #eee; }
+        .cli-row .cli-info { flex:1; min-width:0; font-size:14px; text-align:left; }
+        .cli-row small { color:#777; }
+        .cli-mini-btn { flex:none; padding:8px 10px; border:1px solid #bc6c25; border-radius:8px; background:#fefae0; color:#283618; font-weight:bold; cursor:pointer; font-size:13px; }
+        #cfNome, #cfMorada, #cfLocalidade, #localEvento { text-transform: uppercase; }
+        #nomeEvento[readonly] { background: #f1ede4; }
+        /* ===== Faturação ===== */
+        #faturaNome { text-transform: uppercase; }
+        .fat-card { border: 2px solid #dda15e; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; background: #fff; text-align: left; }
+        .fat-card.feita { border-color: #386641; background: #f4f8ec; }
+        .fat-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .fat-cod { font-weight: bold; font-size: 16px; color: #bc6c25; }
+        .fat-badge { font-size: 12px; padding: 3px 8px; border-radius: 12px; background: #fefae0; border: 1px solid #dda15e; white-space: nowrap; }
+        .fat-card.feita .fat-badge { background: #dff0d8; border-color: #386641; }
+        .fat-linha { font-size: 13px; margin: 3px 0; color: #283618; }
+        .fat-itens { margin: 6px 0; padding: 6px 8px; background: #faf6ee; border-radius: 6px; font-size: 13px; color: #283618; }
+        .fat-acoes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .fat-card.anulada { border-color: #c1121f; background: #fdf0f0; }
+        .fat-card.anulada .fat-badge { background: #f8d7da; border-color: #c1121f; }
+        .fat-card.anulada .fat-itens { text-decoration: line-through; color: #777; }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col pb-10">
+<body>
 
-    <!-- TOP HEADER -->
-    <header class="bg-emerald-800 text-white shadow-md sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-2">
-            <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-seedling text-2xl text-emerald-300"></i>
-                <div>
-                    <h1 class="text-xl font-black tracking-tight leading-none">AgroControl</h1>
-                    <span class="text-xs text-emerald-200">Fertirrigação & Drenagem</span>
-                </div>
-            </div>
-
-            <!-- SYNC STATUS BADGE -->
-            <div id="sync-status-badge" class="text-xs bg-slate-700 text-slate-200 font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-inner">
-                <i class="fa-solid fa-arrows-rotate animate-spin"></i> A inicializar...
-            </div>
-        </div>
-
-        <!-- NAVIGATION TABS -->
-        <nav class="flex bg-emerald-900 text-sm font-semibold border-t border-emerald-700/50">
-            <button onclick="switchTab('registos')" id="tab-btn-registos" class="flex-1 py-3 text-center border-b-4 border-emerald-400 text-white flex items-center justify-center gap-2">
-                <i class="fa-solid fa-pen-to-square"></i> ✍️ Registos
-            </button>
-            <button onclick="switchTab('historico')" id="tab-btn-historico" class="flex-1 py-3 text-center border-b-4 border-transparent text-emerald-200 hover:text-white flex items-center justify-center gap-2">
-                <i class="fa-solid fa-clock-rotate-left"></i> 📜 Histórico
-            </button>
-            <button onclick="switchTab('piquetas')" id="tab-btn-piquetas" class="flex-1 py-3 text-center border-b-4 border-transparent text-emerald-200 hover:text-white flex items-center justify-center gap-2">
-                <i class="fa-solid fa-location-dot"></i> 📍 Nº Piquetas
-            </button>
-        </nav>
-    </header>
-
-    <!-- MAIN CONTAINER -->
-    <main class="max-w-7xl mx-auto px-2 sm:px-4 mt-4 flex-grow w-full">
-
-        <!-- ========================================== -->
-        <!-- TAB 1: REGISTOS -->
-        <!-- ========================================== -->
-        <section id="tab-registos" class="space-y-6">
-
-            <!-- VALVE SELECTOR (1 to 10) -->
-            <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200">
-                <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2">
-                    <i class="fa-solid fa-faucet-drip text-emerald-600"></i> Seleccionar Válvula de Rega:
-                </label>
-                <div class="grid grid-cols-5 sm:grid-cols-10 gap-2" id="valve-buttons-container">
-                    <!-- Gerado Dinamicamente -->
-                </div>
-            </div>
-
-            <!-- ENTRY FORM WITH KEYPAD -->
-            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                    <div class="flex items-center gap-2">
-                        <span id="selected-valve-badge" class="bg-emerald-600 text-white font-black text-sm px-3 py-1 rounded-lg shadow-sm">
-                            Válvula 1
-                        </span>
-                        <span id="valve-pins-indicator" class="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
-                            (-- piquetas)
-                        </span>
-                    </div>
-                    <button onclick="resetCurrentForm()" class="text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 transition">
-                        <i class="fa-solid fa-rotate-left"></i> Limpar Campos
-                    </button>
-                </div>
-
-                <!-- 9 HORIZONTAL ENTRY FIELDS -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    
-                    <!-- PIQUETA -->
-                    <div class="bg-emerald-50/60 p-3 rounded-xl border border-emerald-200 space-y-2">
-                        <div class="font-bold text-emerald-900 text-xs text-center border-b border-emerald-200 pb-1 flex items-center justify-center gap-1">
-                            <i class="fa-solid fa-droplet text-emerald-600"></i> PIQUETA
-                        </div>
-                        <div class="grid grid-cols-3 gap-1.5">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 text-center">Litros</label>
-                                <input type="text" id="input-piq_litros" readonly onclick="setActiveField('piq_litros')" class="w-full text-center font-bold text-base py-2 rounded-lg border border-slate-300 bg-white shadow-inner cursor-pointer" placeholder="0.0">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 text-center">EC</label>
-                                <input type="text" id="input-piq_ec" readonly onclick="setActiveField('piq_ec')" class="w-full text-center font-bold text-base py-2 rounded-lg border border-slate-300 bg-white shadow-inner cursor-pointer" placeholder="0.0">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 text-center">pH</label>
-                                <input type="text" id="input-piq_ph" readonly onclick="setActiveField('piq_ph')" class="w-full text-center font-bold text-base py-2 rounded-lg border border-slate-300 bg-white shadow-inner cursor-pointer" placeholder="0.0">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- BALDE 1 -->
-                    <div class="bg-blue-50/60 p-3 rounded-xl border border-blue-200 space-y-2">
-                        <div class="flex justify-between items-center border-b border-blue-200 pb-1">
-                            <span class="font-bold text-blue-900 text-xs flex items-center gap-1"><i class="fa-solid fa-bucket text-blue-600"></i> BALDE 1</span>
-                            <span id="live-dr1" class="text-[11px] font-black bg-blue-200 text-blue-900 px-2 py-0.5 rounded shadow-sm">DR1: 0%</span>
-                        </div>
-                        <div class="grid grid-cols-3 gap-1.5">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 text-center">Litros</label>
-                                <input type="text" id="input-b1_litros" readonly onclick="setActiveField('b1_litros')" class="w-full text-center font-bold text-base py-2 rounded-lg border border-slate-300 bg-white shadow-inner cursor-pointer" placeholder="0.0">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 text-center">EC</label>
-                                <input type="text" id="input-b1_ec" readonly onclick="setActiveField('b1_ec')" class="w-full text-center font-bold text-base py-2 rounded-lg border border-slate-300 bg-white shadow-inner cursor-pointer" placeholder="0.0">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 text-center">pH</label>
-                                <input type="text" id="input-b1_ph" readonly onclick="setActiveField('b1_ph')" class="w-full text-center font-bold text-base py-2 rounded-lg border border-slate-300 bg-white shadow-inner cursor-pointer" placeholder="0.0">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- BALDE 2 -->
-                    <div class="bg-purple-50/60 p-3 rounded-xl border border-purple-200 space-y-2">
-                        <div class="flex justify-between items-center border-b border-purple-200 pb-1">
-                            <span class="font-bold text-purple-900 text-xs flex items-center gap-1"><i class="fa-solid fa-bucket text-purple-600"></i> BALDE 2</span>
-                            <span id="live-dr2" class="text-[11px] font-black bg-purple-200 text-purple-900 px-2 py-0.5 rounded shadow-sm">DR2: 0%</span>
-                        </div>
-                        <div class="grid grid-cols-3 gap-1.5">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 text-center">Litros</label>
-                                <input type="text" id="input-b2_litros" readonly onclick="setActiveField('b2_litros')" class="w-full text-center font-bold text-base py-2 rounded-lg border border-slate-300 bg-white shadow-inner cursor-pointer" placeholder="0.0">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 text-center">EC</label>
-                                <input type="text" id="input-b2_ec" readonly onclick="setActiveField('b2_ec')" class="w-full text-center font-bold text-base py-2 rounded-lg border border-slate-300 bg-white shadow-inner cursor-pointer" placeholder="0.0">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 text-center">pH</label>
-                                <input type="text" id="input-b2_ph" readonly onclick="setActiveField('b2_ph')" class="w-full text-center font-bold text-base py-2 rounded-lg border border-slate-300 bg-white shadow-inner cursor-pointer" placeholder="0.0">
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- EMBEDDED NUMERIC KEYPAD -->
-                <div class="bg-slate-200/80 p-3 rounded-2xl border border-slate-300 max-w-md mx-auto mt-3 shadow-sm">
-                    <div class="grid grid-cols-3 gap-2 mb-2">
-                        <button onclick="keypadInput('1')" class="keypad-btn">1</button>
-                        <button onclick="keypadInput('2')" class="keypad-btn">2</button>
-                        <button onclick="keypadInput('3')" class="keypad-btn">3</button>
-
-                        <button onclick="keypadInput('4')" class="keypad-btn">4</button>
-                        <button onclick="keypadInput('5')" class="keypad-btn">5</button>
-                        <button onclick="keypadInput('6')" class="keypad-btn">6</button>
-
-                        <button onclick="keypadInput('7')" class="keypad-btn">7</button>
-                        <button onclick="keypadInput('8')" class="keypad-btn">8</button>
-                        <button onclick="keypadInput('9')" class="keypad-btn">9</button>
-
-                        <button onclick="keypadClearField()" class="keypad-btn bg-amber-500 text-white active:bg-amber-600 text-xl font-bold">C</button>
-                        <button onclick="keypadInput('0')" class="keypad-btn">0</button>
-                        <button onclick="keypadBackspace()" class="keypad-btn bg-slate-600 text-white active:bg-slate-700 text-xl font-bold">⌫</button>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="nextField()" class="bg-slate-800 text-white font-bold py-3 px-4 rounded-xl shadow active:scale-95 transition flex items-center justify-center gap-2 text-sm sm:text-base">
-                            Próximo Campo ➡️
-                        </button>
-                        <button onclick="saveRecord()" class="bg-emerald-600 text-white font-black py-3 px-4 rounded-xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2 text-sm sm:text-base hover:bg-emerald-700">
-                            <i class="fa-solid fa-floppy-disk"></i> GUARDAR
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TODAY'S READINGS TABLE -->
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-sm font-extrabold text-slate-700 flex items-center gap-2">
-                        <i class="fa-solid fa-calendar-day text-emerald-600"></i> Registos de Hoje (<span id="today-date-label">--/--/----</span>)
-                    </h2>
-                    <span id="today-count-badge" class="bg-emerald-100 text-emerald-800 font-bold text-xs px-2.5 py-1 rounded-full">0 registos</span>
-                </div>
-
-                <div class="overflow-x-auto table-container rounded-xl border border-slate-300">
-                    <table class="table-agri bg-white text-slate-700">
-                        <thead>
-                            <tr>
-                                <th>Válvula</th>
-                                <th>Hora</th>
-                                <th>Piq Litros</th>
-                                <th>Piq EC</th>
-                                <th>Piq pH</th>
-                                <th>B1 Litros</th>
-                                <th>B1 EC</th>
-                                <th>B1 pH</th>
-                                <th class="bg-blue-100 text-blue-900 font-black">DR1 (%)</th>
-                                <th>B2 Litros</th>
-                                <th>B2 EC</th>
-                                <th>B2 pH</th>
-                                <th class="bg-purple-100 text-purple-900 font-black">DR2 (%)</th>
-                                <th>Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody id="today-table-body">
-                            <!-- Renderizado Dinamicamente -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- ========================================== -->
-        <!-- TAB 2: HISTÓRICO -->
-        <!-- ========================================== -->
-        <section id="tab-historico" class="space-y-4 hidden">
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                <h2 class="text-sm font-extrabold text-slate-700 flex items-center gap-2">
-                    <i class="fa-solid fa-filter text-emerald-600"></i> Filtrar Histórico de Leituras
-                </h2>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">Válvula</label>
-                        <select id="hist-valve" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-semibold">
-                            <option value="ALL">Todas as Válvulas</option>
-                            <script>
-                                for(let i=1; i<=10; i++) document.write(`<option value="${i}">Válvula ${i}</option>`);
-                            </script>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">Data Início</label>
-                        <input type="date" id="hist-start" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-sm font-semibold">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">Data Fim</label>
-                        <input type="date" id="hist-end" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-sm font-semibold">
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-2">
-                    <button onclick="renderHistoryTable()" class="bg-emerald-600 text-white font-bold px-5 py-2.5 rounded-xl shadow hover:bg-emerald-700 text-sm">
-                        <i class="fa-solid fa-magnifying-glass"></i> Aplicar Filtros
-                    </button>
-                </div>
-            </div>
-
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-                <div class="overflow-x-auto table-container rounded-xl border border-slate-300">
-                    <table class="table-agri bg-white text-slate-700">
-                        <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>Hora</th>
-                                <th>Válvula</th>
-                                <th>Piq Litros</th>
-                                <th>Piq EC</th>
-                                <th>Piq pH</th>
-                                <th>B1 Litros</th>
-                                <th>B1 EC</th>
-                                <th>B1 pH</th>
-                                <th class="bg-blue-100 text-blue-900 font-black">DR1 (%)</th>
-                                <th>B2 Litros</th>
-                                <th>B2 EC</th>
-                                <th>B2 pH</th>
-                                <th class="bg-purple-100 text-purple-900 font-black">DR2 (%)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="history-table-body">
-                            <!-- Renderizado Dinamicamente -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- ========================================== -->
-        <!-- TAB 3: NÚMERO PIQUETAS -->
-        <!-- ========================================== -->
-        <section id="tab-piquetas" class="space-y-4 hidden">
-            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                <div class="flex items-center gap-3">
-                    <div class="bg-emerald-100 text-emerald-800 p-3 rounded-2xl">
-                        <i class="fa-solid fa-location-dot text-xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-base font-black text-slate-800">Configuração de Piquetas por Válvula</h2>
-                        <p class="text-xs text-slate-500">Este valor é utilizado automaticamente no cálculo das percentagens de drenagem (DR1 e DR2).</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2" id="piquetas-config-container">
-                    <!-- Gerado Dinamicamente -->
-                </div>
-
-                <div class="flex justify-end pt-2">
-                    <button onclick="savePiquetasConfig()" class="bg-emerald-600 text-white font-black px-6 py-3 rounded-xl shadow-lg hover:bg-emerald-700 text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-floppy-disk"></i> Guardar Configuração
-                    </button>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- TOAST NOTIFICATION -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-3 transform translate-y-28 opacity-0 transition-all duration-300 z-50">
-        <i class="fa-solid fa-circle-check text-emerald-400 text-xl"></i>
-        <span id="toast-msg" class="text-sm font-bold">Sucesso!</span>
+<div class="container">
+    <div style="text-align: center; margin-bottom: 15px; border-bottom: 2px solid #dda15e; padding-bottom: 10px;">
+        <h2 style="margin: 0; color: #bc6c25; font-size: 22px;">DLAPMEL - Gestão de Vendas</h2>
     </div>
 
-    <!-- MAIN APP SCRIPT -->
-    <script>
-        // CONFIGURAÇÃO DO GOOGLE SHEETS (COLOCA AQUI O TEU URL /exec)
-        const SHEETS_URL = 'https://script.google.com/macros/s/SEU_SCRIPT_ID_AQUI/exec';
+    <div class="tab-menu-container">
+        <div class="tab-menu-row">
+            <button class="tab-btn active" id="tabBtnInicio" onclick="mudarAba('inicioTab', this)">🏠 Início</button>
+            <button class="tab-btn" id="tabBtnVendas" onclick="mudarAba('vendasTab', this)">🛒 Vendas</button>
+            <button class="tab-btn" onclick="mudarAba('precosFeiraTab', this)">🎪 Preços Feira</button>
+            <button class="tab-btn" onclick="mudarAba('precosRevendaTab', this)">🤝 Preços Revenda</button>
+        </div>
+        <div class="tab-menu-row">
+            <button class="tab-btn resumo-btn" onclick="mudarAba('resumoFeiraTab', this)">📊 Resumo Feira</button>
+            <button class="tab-btn resumo-btn" onclick="mudarAba('resumoRevendaTab', this)">🤝 Resumo Revenda</button>
+            <button class="tab-btn resumo-btn" id="tabBtnFaturacao" onclick="mudarAba('faturacaoTab', this)">🧾 Faturação</button>
+        </div>
+    </div>
 
-        const fieldsOrder = ['piq_litros', 'piq_ec', 'piq_ph', 'b1_litros', 'b1_ec', 'b1_ph', 'b2_litros', 'b2_ec', 'b2_ph'];
-        let activeField = 'piq_litros';
-        let currentValve = 1;
-        let formValues = {
-            piq_litros: '', piq_ec: '', piq_ph: '',
-            b1_litros: '', b1_ec: '', b1_ph: '',
-            b2_litros: '', b2_ec: '', b2_ph: ''
-        };
+    <!-- ABA 0: INÍCIO -->
+    <div id="inicioTab" class="tab-content active">
+        <h3>🏠 Selecione o Tipo de Atividade</h3>
+        <p style="font-size:12px; color:#666;">Clique em Feira ou Revenda para definir automaticamente o tipo e preencher a data atual:</p>
+        
+        <div class="row-group" style="margin-bottom: 20px;">
+            <button type="button" id="btnFeira" class="select-type-btn" onclick="selecionarTipoAtividade('Feira')">🎪 Feira</button>
+            <button type="button" id="btnRevenda" class="select-type-btn" onclick="selecionarTipoAtividade('Revenda')">🤝 Revenda</button>
+        </div>
 
-        let piquetasConfig = {};
-        let recordsData = [];
+        <div class="form-group">
+            <label for="dataEvento">Data(s) do Evento:</label>
+            <input type="text" id="dataEvento" placeholder="Clique em Feira ou Revenda acima...">
+        </div>
 
-        window.onload = function() {
-            loadPiquetasConfig();
-            loadRecords();
-            renderValveButtons();
-            renderPiquetasConfigUI();
-            setActiveField('piq_litros');
+        <div class="form-group" id="clienteBox" style="position:relative;">
+            <label for="nomeEvento" id="labelNomeEvento">Nome do Evento / Cliente:</label>
+            <div style="display:flex;gap:8px;">
+                <input type="text" id="nomeEvento" style="flex:1;min-width:0;" placeholder="Clique em Feira ou Revenda acima..." autocomplete="off" oninput="if (modoOperacao === 'Revenda' && !event.isComposing) limparCampo(this); aoEscreverNome()" onfocus="aoEscreverNome()" onblur="if (modoOperacao === 'Revenda') limparCampo(this)">
+                <input type="text" id="tipoFeira" style="display:none;flex:1;min-width:0;" placeholder="Tipo (opcional)" autocomplete="off" oninput="mudarTipoFeira()">
+            </div>
+            <div id="sugestoesClientes" class="sugestoes"></div>
+        </div>
+
+        <div id="clienteCard" class="cliente-card"></div>
+        <div id="clienteBarra" style="display:none;gap:8px;margin-bottom:12px;">
+            <button type="button" class="export-btn-action sync-export-btn" style="min-height:40px;" onclick="abrirListaClientes()">👥 Lista de clientes</button>
+            <button type="button" class="export-btn-action sync-export-btn" style="min-height:40px;" onclick="abrirFormCliente(null, '')">➕ Novo cliente</button>
+        </div>
+
+        <div class="form-group">
+            <label for="localEvento">Local:</label>
+            <input type="text" id="localEvento" placeholder="Introduza o local..." autocomplete="off" oninput="if (!event.isComposing) limparCampo(this)" onblur="limparCampo(this)">
+        </div>
+
+        <button type="button" class="submit-btn" onclick="avancarParaVendas()">💾 Guardar e Avançar para Vendas</button>
+    </div>
+
+    <!-- ABA 1: REGISTO DE VENDAS -->
+    <div id="vendasTab" class="tab-content">
+        <div style="text-align: center;">
+            <span id="badgeModoVenda" class="mode-badge mode-feira">Modo Ativo: Preços de Feira</span>
+        </div>
+
+        <form id="itemForm" onsubmit="event.preventDefault(); adicionarAoCarrinho();">
+            <!-- CATEGORIA 1: MEL -->
+            <div class="form-group">
+                <label>1. Tipo de Mel:</label>
+                <div class="button-group">
+                    <button type="button" class="option-btn active" onclick="selecionarMel('Multifloral', this)">Multifloral</button>
+                    <button type="button" class="option-btn" onclick="selecionarMel('Rosmaninho', this)">Rosmaninho</button>
+                    <button type="button" class="option-btn" onclick="selecionarMel('Eucalipto', this)">Eucalipto</button>
+                    <button type="button" class="option-btn" onclick="selecionarMel('Laranjeiro', this)">Laranjeiro</button>
+                    <button type="button" class="option-btn" onclick="selecionarMel('Castanheiro', this)">Castanheiro</button>
+                    <button type="button" class="option-btn" onclick="selecionarMel('Urze', this)">Urze</button>
+                </div>
+            </div>
+
+            <div class="form-group" id="tamanhoMelGroup">
+                <label>Tamanho do Frasco (Mel):</label>
+                <div class="button-group">
+                    <button type="button" class="option-btn active" onclick="selecionarTamanhoMel('1kg', this)">1kg</button>
+                    <button type="button" class="option-btn" onclick="selecionarTamanhoMel('500g', this)">500g</button>
+                    <button type="button" class="option-btn" onclick="selecionarTamanhoMel('250g', this)">250g</button>
+                </div>
+            </div>
+
+            <!-- CATEGORIA 2: PÓLEN -->
+            <div class="section-divider">2. Pólen</div>
+            <div class="form-group">
+                <div class="button-group">
+                    <button type="button" class="option-btn" onclick="selecionarPolen('Pólen 110g', this)">Pólen 110g</button>
+                    <button type="button" class="option-btn" onclick="selecionarPolen('Pólen 220g', this)">Pólen 220g</button>
+                    <button type="button" class="option-btn" onclick="selecionarPolen('Pólen 450g', this)">Pólen 450g</button>
+                </div>
+            </div>
+
+            <!-- CATEGORIA 3: OUTROS PRODUTOS -->
+            <div class="section-divider">3. Outros Produtos</div>
+            <div class="form-group">
+                <div class="button-group">
+                    <button type="button" class="option-btn" onclick="selecionarOutroProduto('Própolis 30mg', this)">Própolis 30mg</button>
+                    <button type="button" class="option-btn" onclick="selecionarOutroProduto('TopDown', this)">TopDown</button>
+                    <button type="button" class="option-btn" onclick="selecionarOutroProduto('Cocktail', this)">Cocktail</button>
+                    <button type="button" class="option-btn" onclick="selecionarOutroProduto('Outros', this)">Outros</button>
+                </div>
+            </div>
+
+            <input type="hidden" id="tipoProduto" value="Mel">
+            <input type="hidden" id="detalheProduto" value="Multifloral - 1kg">
+
+            <div class="row-group">
+                <div class="form-group">
+                    <label for="precoUnitario">Preço Unitário (€):</label>
+                    <div class="price-control-container">
+                        <button type="button" class="step-btn" onclick="alterarValorInput('precoUnitario', -0.5, 0)">-</button>
+                        <input type="number" id="precoUnitario" class="price-input" value="10.0" step="0.5" min="0">
+                        <button type="button" class="step-btn" onclick="alterarValorInput('precoUnitario', 0.5, 0)">+</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="quantidade">Quantidade:</label>
+                    <div class="price-control-container">
+                        <button type="button" class="step-btn" onclick="alterarValorInput('quantidade', -1, 1)">-</button>
+                        <input type="number" id="quantidade" class="price-input" value="1" min="1" step="1">
+                        <button type="button" class="step-btn" onclick="alterarValorInput('quantidade', 1, 1)">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="action-btn">➕ Adicionar à Pré-Venda</button>
+        </form>
+
+        <div class="cart-container">
+            <h3 style="margin-top:0; color:#bc6c25; font-size:15px;">🛒 Lista de Produtos na Venda Atual</h3>
+            <div style="overflow-x:auto;">
+                <table class="cart-table">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Qtd</th>
+                            <th>P. Unit</th>
+                            <th>Subtotal</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cartBody">
+                        <tr><td colspan="5" style="color:#777; text-align:center;">Nenhum produto adicionado ainda.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px; margin-bottom: 10px;">
+                <label for="descontoCarrinho">Desconto (€):</label>
+                <div class="price-control-container" style="max-width: 220px;">
+                    <button type="button" class="step-btn" onclick="alterarDescontoCarrinho(-0.5)">-</button>
+                    <input type="number" id="descontoCarrinho" class="price-input" value="0.0" min="0" step="0.5" onchange="renderizarCarrinho()">
+                    <button type="button" class="step-btn" onclick="alterarDescontoCarrinho(0.5)">+</button>
+                </div>
+            </div>
+
+            <div style="text-align:right; font-size:13px; color:#555; margin-bottom:4px;">
+                Subtotal: <span id="cartSubtotal">0,0 €</span>
+            </div>
+            <div style="text-align:right; font-size:13px; color:#bc6c25; margin-bottom:6px;">
+                Desconto: <span id="cartDescontoValor">0,0 €</span>
+            </div>
+            <div style="text-align:right; font-size:16px; font-weight:bold; margin-bottom:15px; color:#283618;">
+                Total Final: <span id="cartTotal">0,0 €</span>
+            </div>
+
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Método de Pagamento:</label>
+                <div class="button-group">
+                    <button type="button" class="option-btn active" onclick="selecionarOpcaoPagamento('Dinheiro', this)">Dinheiro</button>
+                    <button type="button" class="option-btn" onclick="selecionarOpcaoPagamento('MB Way', this)">MB Way</button>
+                    <button type="button" class="option-btn" onclick="selecionarOpcaoPagamento('Cartão', this)">Cartão</button>
+                    <button type="button" class="option-btn" onclick="selecionarOpcaoPagamento('Transferência', this)">Transferência</button>
+                </div>
+                <input type="hidden" id="pagamento" value="Dinheiro">
+            </div>
+
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>🧾 Fatura?</label>
+                <div class="button-group">
+                    <button type="button" class="option-btn" id="btnFaturaSim" onclick="escolherFatura('Sim')">Sim</button>
+                    <button type="button" class="option-btn active" id="btnFaturaNao" onclick="escolherFatura('Não')">Não</button>
+                </div>
+                <div id="faturaFeiraCampos" style="display:none;margin-top:8px;">
+                    <input type="text" id="faturaNome" placeholder="Nome para a fatura (obrigatório)" autocomplete="off" oninput="if (!event.isComposing) limparCampo(this)" onblur="limparCampo(this)" style="margin-bottom:6px;">
+                    <input type="text" id="faturaNIF" inputmode="numeric" maxlength="9" placeholder="NIF (obrigatório)" autocomplete="off" oninput="this.value=this.value.replace(/\D/g,'')">
+                </div>
+                <div id="faturaRevendaInfo" class="cliente-card" style="margin:8px 0 0 0;"></div>
+            </div>
+
+            <button type="button" class="submit-btn" onclick="registarVendaFinal()">✅ Registar Venda Final</button>
+        </div>
+    </div>
+
+    <!-- ABA 2: PREÇOS DE FEIRA -->
+    <div id="precosFeiraTab" class="tab-content">
+        <h3>🎪 Preços de Feira</h3>
+        <p style="font-size:12px; color:#666;">Ajuste os preços de venda para Feiras:</p>
+        
+        <h4>1. Mel (por Tipo e Tamanho)</h4>
+        <div style="overflow-x:auto;">
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th style="width:28%;">Tipo</th>
+                        <th style="width:24%;">1kg</th>
+                        <th style="width:24%;">500g</th>
+                        <th style="width:24%;">250g</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaPrecosFeiraMelBody"></tbody>
+            </table>
+        </div>
+
+        <h4>2. Pólen</h4>
+        <div style="overflow-x:auto;">
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th style="width:50%;">Variedade</th>
+                        <th style="width:50%;">Preço (€)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaPrecosFeiraPolenBody"></tbody>
+            </table>
+        </div>
+
+        <h4>3. Outros Produtos</h4>
+        <div style="overflow-x:auto;">
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th style="width:50%;">Produto</th>
+                        <th style="width:50%;">Preço (€)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaPrecosFeiraOutrosBody"></tbody>
+            </table>
+        </div>
+
+        <button type="button" class="submit-btn" onclick="guardarPrecos('feira'); alert('Preços de Feira guardados com sucesso!');">Guardar Preços de Feira</button>
+    </div>
+
+    <!-- ABA 3: PREÇOS DE REVENDA -->
+    <div id="precosRevendaTab" class="tab-content">
+        <h3>🤝 Preços de Revenda</h3>
+        <p style="font-size:12px; color:#666;">Ajuste os preços de venda para Revenda:</p>
+        
+        <h4>1. Mel (por Tipo e Tamanho)</h4>
+        <div style="overflow-x:auto;">
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th style="width:28%;">Tipo</th>
+                        <th style="width:24%;">1kg</th>
+                        <th style="width:24%;">500g</th>
+                        <th style="width:24%;">250g</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaPrecosRevendaMelBody"></tbody>
+            </table>
+        </div>
+
+        <h4>2. Pólen</h4>
+        <div style="overflow-x:auto;">
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th style="width:50%;">Variedade</th>
+                        <th style="width:50%;">Preço (€)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaPrecosRevendaPolenBody"></tbody>
+            </table>
+        </div>
+
+        <h4>3. Outros Produtos</h4>
+        <div style="overflow-x:auto;">
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th style="width:50%;">Produto</th>
+                        <th style="width:50%;">Preço (€)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaPrecosRevendaOutrosBody"></tbody>
+            </table>
+        </div>
+
+        <button type="button" class="submit-btn" onclick="guardarPrecos('revenda'); alert('Preços de Revenda guardados com sucesso!');">Guardar Preços de Revenda</button>
+    </div>
+
+    <!-- ABA 4: RESUMO DE FEIRAS -->
+    <div id="resumoFeiraTab" class="tab-content">
+        <h3>📊 Resumo de Vendas em Feiras</h3>
+
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <div style="flex:1;min-width:0;">
+                <label style="font-size:12px;">📍 Local:</label>
+                <select id="filtroLocalFeira" class="filtro-resumo" onchange="mudarFiltro('Feira', 'local')"></select>
+            </div>
+            <div style="flex:1;min-width:0;">
+                <label style="font-size:12px;">📅 Data:</label>
+                <select id="filtroDataFeira" class="filtro-resumo" onchange="mudarFiltro('Feira', 'data')"></select>
+            </div>
+        </div>
+        <button type="button" class="export-btn-action sync-export-btn" style="min-height:36px;padding:6px;margin-bottom:12px;width:100%;flex:none;" onclick="limparFiltros('Feira')">✖ Limpar filtros</button>
+
+        <div class="export-actions-grid">
+            <button type="button" class="export-btn-action sync-export-btn" onclick="atualizarDaFolha()">☁️ Sincronizar com a Folha</button>
+            <button type="button" class="export-btn-action pdf-export-btn" onclick="abrirPDF('feira')">📄 Abrir Resumo PDF</button>
+        </div>
+
+        <div id="conteudoPDF_feira">
+            <div class="summary-card" style="background: #fefae0; border-left: 5px solid #bc6c25;">
+                <h4>📋 Dados do Evento (Feira)</h4>
+                <p id="resumoFeiraNome" style="margin-bottom: 4px; font-size: 14px; color: #283618;"><b>Evento:</b> -</p>
+                <p id="resumoFeiraLocal" style="margin-bottom: 4px; font-size: 14px; color: #283618;"><b>Local:</b> -</p>
+                <p id="resumoFeiraData" style="margin: 0; font-size: 13px; color: #555; font-weight: normal;"><b>Data:</b> -</p>
+            </div>
+
+            <div class="row-group">
+                <div class="summary-card" style="flex: 1; margin-bottom: 0;">
+                    <h4>Faturação Total (Feira)</h4>
+                    <p id="totalFaturadoFeira">0,0 €</p>
+                </div>
+                <div class="summary-card" style="flex: 1; margin-bottom: 0; border-left-color: #dda15e;">
+                    <h4>Total Descontos (Feira)</h4>
+                    <p id="totalDescontosFeira" style="color: #bc6c25;">0,0 €</p>
+                </div>
+            </div>
+            <div style="margin-bottom: 12px;"></div>
             
-            const hoje = new Date().toISOString().split('T')[0];
-            document.getElementById('hist-start').value = hoje;
-            document.getElementById('hist-end').value = hoje;
-            document.getElementById('today-date-label').innerText = formatDatePt(hoje);
+            <div class="summary-card">
+                <h4>Vendas de Mel em Feira (Tipo vs Tamanho)</h4>
+                <div style="overflow-x:auto;">
+                    <table class="matrix-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Tipo de Mel</th>
+                                <th>1kg</th>
+                                <th>500g</th>
+                                <th>250g</th>
+                            </tr>
+                        </thead>
+                        <tbody id="matrixResumoFeiraBody"></tbody>
+                    </table>
+                </div>
+            </div>
 
-            renderTodayTable();
-            sincronizarComSheets();
-            setInterval(sincronizarComSheets, 30000); // Tenta sincronizar a cada 30s em segundo plano
-        };
+            <div class="summary-card">
+                <h4>Vendas de Pólen em Feira</h4>
+                <div style="overflow-x:auto;">
+                    <table class="matrix-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Variedade</th>
+                                <th>Qtd Total</th>
+                                <th>Total (€)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="polenResumoFeiraBody"></tbody>
+                    </table>
+                </div>
+            </div>
 
-        // --- NAVEGAÇÃO ENTRE ABAS ---
-        function switchTab(tab) {
-            ['registos', 'historico', 'piquetas'].forEach(t => {
-                document.getElementById(`tab-${t}`).classList.add('hidden');
-                const btn = document.getElementById(`tab-btn-${t}`);
-                btn.className = "flex-1 py-3 text-center border-b-4 border-transparent text-emerald-200 hover:text-white flex items-center justify-center gap-2";
+            <div class="summary-card">
+                <h4>Vendas de Outros Produtos em Feira</h4>
+                <div style="overflow-x:auto;">
+                    <table class="matrix-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Qtd Total</th>
+                                <th>Total (€)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="outrosResumoFeiraBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <h4>Por Método de Pagamento (Feira)</h4>
+                <div style="overflow-x:auto;">
+                    <table class="payment-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Dinheiro</th>
+                                <th>MB Way</th>
+                                <th>Cartão</th>
+                                <th>Transf.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td id="pag_Feira_Dinheiro">0,0 €</td>
+                                <td id="pag_Feira_MBWay">0,0 €</td>
+                                <td id="pag_Feira_Cartao">0,0 €</td>
+                                <td id="pag_Feira_Transferencia">0,0 €</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <h4>🎪 Histórico de Registos (Feira)</h4>
+                <div id="historicoVendasFeira" class="history-list">Nenhuma venda em feira registada.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ABA 5: RESUMO DE REVENDA -->
+    <div id="resumoRevendaTab" class="tab-content">
+        <h3>🤝 Resumo de Vendas em Revenda</h3>
+
+        <div style="margin-bottom:8px;">
+            <label style="font-size:12px;">👤 Cliente:</label>
+            <select id="filtroClienteRevenda" class="filtro-resumo" onchange="mudarFiltro('Revenda', 'cliente')"></select>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <div style="flex:1;min-width:0;">
+                <label style="font-size:12px;">📍 Local:</label>
+                <select id="filtroLocalRevenda" class="filtro-resumo" onchange="mudarFiltro('Revenda', 'local')"></select>
+            </div>
+            <div style="flex:1;min-width:0;">
+                <label style="font-size:12px;">📅 Data:</label>
+                <select id="filtroDataRevenda" class="filtro-resumo" onchange="mudarFiltro('Revenda', 'data')"></select>
+            </div>
+        </div>
+        <button type="button" class="export-btn-action sync-export-btn" style="min-height:36px;padding:6px;margin-bottom:12px;width:100%;flex:none;" onclick="limparFiltros('Revenda')">✖ Limpar filtros</button>
+
+        <div class="export-actions-grid">
+            <button type="button" class="export-btn-action sync-export-btn" onclick="atualizarDaFolha()">☁️ Sincronizar com a Folha</button>
+            <button type="button" class="export-btn-action pdf-export-btn" onclick="abrirPDF('revenda')">📄 Abrir Resumo PDF</button>
+        </div>
+
+        <div id="conteudoPDF_revenda">
+            <div class="summary-card" style="background: #fefae0; border-left: 5px solid #283618;">
+                <h4>📋 Dados do Cliente / Registo (Revenda)</h4>
+                <p id="resumoRevendaNome" style="margin-bottom: 4px; font-size: 14px; color: #283618;"><b>Cliente:</b> -</p>
+                <p id="resumoRevendaLocal" style="margin-bottom: 4px; font-size: 14px; color: #283618;"><b>Local:</b> -</p>
+                <p id="resumoRevendaData" style="margin: 0; font-size: 13px; color: #555; font-weight: normal;"><b>Data:</b> -</p>
+            </div>
+
+            <div class="row-group">
+                <div class="summary-card" style="flex: 1; margin-bottom: 0;">
+                    <h4>Faturação Total (Revenda)</h4>
+                    <p id="totalFaturadoRevenda">0,0 €</p>
+                </div>
+                <div class="summary-card" style="flex: 1; margin-bottom: 0; border-left-color: #283618;">
+                    <h4>Total Descontos (Revenda)</h4>
+                    <p id="totalDescontosRevenda" style="color: #bc6c25;">0,0 €</p>
+                </div>
+            </div>
+            <div style="margin-bottom: 12px;"></div>
+            
+            <div class="summary-card">
+                <h4>Vendas de Mel em Revenda (Tipo vs Tamanho)</h4>
+                <div style="overflow-x:auto;">
+                    <table class="matrix-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Tipo de Mel</th>
+                                <th>1kg</th>
+                                <th>500g</th>
+                                <th>250g</th>
+                            </tr>
+                        </thead>
+                        <tbody id="matrixResumoRevendaBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <h4>Vendas de Pólen em Revenda</h4>
+                <div style="overflow-x:auto;">
+                    <table class="matrix-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Variedade</th>
+                                <th>Qtd Total</th>
+                                <th>Total (€)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="polenResumoRevendaBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <h4>Vendas de Outros Produtos em Revenda</h4>
+                <div style="overflow-x:auto;">
+                    <table class="matrix-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Qtd Total</th>
+                                <th>Total (€)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="outrosResumoRevendaBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <h4>Por Método de Pagamento (Revenda)</h4>
+                <div style="overflow-x:auto;">
+                    <table class="payment-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Dinheiro</th>
+                                <th>MB Way</th>
+                                <th>Cartão</th>
+                                <th>Transf.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td id="pag_Revenda_Dinheiro">0,0 €</td>
+                                <td id="pag_Revenda_MBWay">0,0 €</td>
+                                <td id="pag_Revenda_Cartao">0,0 €</td>
+                                <td id="pag_Revenda_Transferencia">0,0 €</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <h4>🤝 Histórico de Registos (Revenda)</h4>
+                <div id="historicoVendasRevenda" class="history-list">Nenhuma venda em revenda registada.</div>
+            </div>
+        </div>
+    </div>
+        <!-- ABA: FATURAÇÃO -->
+    <div id="faturacaoTab" class="tab-content">
+        <h3>🧾 Faturação</h3>
+        <div id="faturacaoResumo" style="font-size:13px;margin-bottom:10px;background:#fefae0;border-radius:8px;padding:8px 10px;"></div>
+
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <div style="flex:1;min-width:0;">
+                <label style="font-size:12px;">Estado:</label>
+                <select id="fatEstado" class="filtro-resumo" onchange="mudarFiltroFat()">
+                    <option value="pendente">Por faturar</option>
+                    <option value="feita">Já faturadas</option>
+                    <option value="anulada">Anuladas</option>
+                    <option value="todas">Todas</option>
+                </select>
+            </div>
+            <div style="flex:1;min-width:0;">
+                <label style="font-size:12px;">Tipo:</label>
+                <select id="fatTipo" class="filtro-resumo" onchange="mudarFiltroFat()">
+                    <option value="">Feira e Revenda</option>
+                    <option value="Feira">Feira</option>
+                    <option value="Revenda">Revenda</option>
+                </select>
+            </div>
+        </div>
+        <div style="margin-bottom:10px;">
+            <label style="font-size:12px;">📅 Data:</label>
+            <select id="fatData" class="filtro-resumo" onchange="mudarFiltroFat()"></select>
+        </div>
+
+        <div id="faturacaoLista"></div>
+    </div>
+
+<div style="margin-top:14px;padding-top:10px;border-top:1px solid #dda15e;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#283618;">
+        <span id="syncEstado">—</span>
+        <button class="tab-btn" style="flex:none;padding:8px 12px;" onclick="sincronizarVendas()">☁️ Sincronizar</button>
+    </div>
+</div>
+
+    <div id="clienteFormModal" class="cli-modal" style="z-index:1100;">
+        <div class="cli-modal-box">
+            <h3 id="cfTitulo" style="margin:0 0 4px 0;color:#bc6c25;text-align:center;">Novo cliente</h3>
+            <p id="cfAviso" style="display:none;margin:0 0 6px 0;font-size:12px;color:#666;text-align:center;">Este cliente ainda não está na lista. Preencha os dados para o juntar à base de dados.</p>
+            <input type="hidden" id="cfId">
+
+            <label class="cli-label" for="cfNome">Nome / Designação *</label>
+            <input type="text" id="cfNome" class="cli-input" autocomplete="off" oninput="if (!event.isComposing) limparCampo(this)" onblur="limparCampo(this)">
+
+            <label class="cli-label" for="cfNif">NIF</label>
+            <input type="text" id="cfNif" class="cli-input" inputmode="numeric" maxlength="9" placeholder="9 dígitos" autocomplete="off" oninput="this.value=this.value.replace(/\D/g,'')">
+
+            <label class="cli-label" for="cfMorada">Morada</label>
+            <input type="text" id="cfMorada" class="cli-input" autocomplete="off" oninput="if (!event.isComposing) limparCampo(this)" onblur="limparCampo(this)">
+
+            <div style="display:flex;gap:8px;">
+                <div style="flex:0 0 38%;">
+                    <label class="cli-label" for="cfCP">Código postal</label>
+                    <input type="text" id="cfCP" class="cli-input" inputmode="numeric" maxlength="8" placeholder="0000-000" autocomplete="off" oninput="formatarCP(this)">
+                </div>
+                <div style="flex:1;min-width:0;">
+                    <label class="cli-label" for="cfLocalidade">Localidade</label>
+                    <input type="text" id="cfLocalidade" class="cli-input" autocomplete="off" oninput="if (!event.isComposing) limparCampo(this)" onblur="limparCampo(this)">
+                </div>
+            </div>
+
+            <label class="cli-label" for="cfPais">País</label>
+            <input type="text" id="cfPais" class="cli-input" value="Portugal" autocomplete="off">
+
+            <label class="cli-label" for="cfTelefone">Telefone</label>
+            <input type="text" id="cfTelefone" class="cli-input" inputmode="tel" autocomplete="off">
+
+            <label class="cli-label" for="cfEmail">Email</label>
+            <input type="text" id="cfEmail" class="cli-input" inputmode="email" autocomplete="off">
+
+            <p id="cfErro" style="color:#c1121f;font-size:13px;font-weight:bold;margin:10px 0 0 0;min-height:16px;"></p>
+
+            <button type="button" class="submit-btn" style="margin-top:8px;" onclick="guardarFormCliente()">💾 Guardar cliente</button>
+            <button type="button" class="submit-btn" style="margin-top:8px;background:#999;" onclick="fecharFormCliente()">Cancelar</button>
+            <button type="button" id="cfApagar" class="submit-btn" style="margin-top:8px;background:#c1121f;display:none;" onclick="apagarClienteForm()">🗑️ Apagar cliente</button>
+        </div>
+    </div>
+
+    <div id="clienteListaModal" class="cli-modal" style="z-index:1050;">
+        <div class="cli-modal-box">
+            <h3 style="margin:0 0 8px 0;color:#bc6c25;text-align:center;">👥 Clientes</h3>
+            <input type="text" id="clListaBusca" class="cli-input" placeholder="Pesquisar por nome ou NIF..." autocomplete="off" oninput="renderListaClientes()">
+            <div id="clListaCorpo" style="margin-top:8px;max-height:50vh;overflow-y:auto;"></div>
+            <button type="button" class="submit-btn" style="margin-top:10px;" onclick="abrirFormCliente(null, '')">➕ Novo cliente</button>
+            <button type="button" class="submit-btn" style="margin-top:8px;background:#999;" onclick="fecharListaClientes()">Fechar</button>
+        </div>
+    </div>
+
+    <div id="pdfDiaModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+        <div style="background:#fff;border-radius:12px;padding:18px;width:100%;max-width:340px;box-sizing:border-box;">
+            <h3 style="margin:0 0 4px 0;color:#bc6c25;text-align:center;">Resumo de que dia?</h3>
+            <p style="margin:0 0 12px 0;font-size:12px;color:#666;text-align:center;">O filtro de local escolhido no resumo mantém-se.</p>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                <button type="button" class="option-btn" style="padding:14px;" onclick="escolherDiaPDF('hoje')">Hoje (<span id="pdfDiaHojeTxt"></span>)</button>
+                <button type="button" class="option-btn" style="padding:14px;" onclick="escolherDiaPDF('ontem')">Ontem (<span id="pdfDiaOntemTxt"></span>)</button>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <input type="date" id="pdfDiaOutro" style="flex:1;padding:10px;border:2px solid #bc6c25;border-radius:8px;font-size:16px;box-sizing:border-box;">
+                    <button type="button" class="option-btn" style="flex:none;min-width:0;padding:12px 14px;" onclick="escolherDiaPDF('outro')">OK</button>
+                </div>
+                <button type="button" class="option-btn" style="padding:14px;" onclick="escolherDiaPDF('ecra')">Usar os filtros do ecrã</button>
+                <button type="button" class="option-btn" style="border-color:#999;color:#555;" onclick="fecharModalPDF()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const tiposMel = ['Multifloral', 'Rosmaninho', 'Eucalipto', 'Laranjeiro', 'Castanheiro', 'Urze'];
+    const tamanhosMel = ['1kg', '500g', '250g'];
+    const polenProdutos = ['Pólen 110g', 'Pólen 220g', 'Pólen 450g'];
+    const outrosProdutos = ['Própolis 30mg', 'TopDown', 'Cocktail', 'Outros'];
+
+    const precosFeiraMelPadrao = {
+        'Multifloral': { '1kg': 10.0, '500g': 6.0, '250g': 4.5 },
+        'Rosmaninho':  { '1kg': 11.0, '500g': 6.0, '250g': 4.5 },
+        'Eucalipto':   { '1kg': 11.0, '500g': 6.0, '250g': 4.5 },
+        'Laranjeiro':  { '1kg': 12.0, '500g': 6.0, '250g': 4.5 },
+        'Castanheiro': { '1kg': 12.0, '500g': 6.0, '250g': 4.5 },
+        'Urze':        { '1kg': 12.0, '500g': 6.0, '250g': 4.5 }
+    };
+
+    const precosFeiraPolenPadrao = {
+        'Pólen 110g': 5.0,
+        'Pólen 220g': 8.0,
+        'Pólen 450g': 15.0
+    };
+
+    const precosFeiraOutrosPadrao = {
+        'Própolis 30mg': 11.0,
+        'TopDown': 6.0,
+        'Cocktail': 6.0,
+        'Outros': 0.0
+    };
+
+    function gerarPrecosRevendaMel(feiraMel) {
+        let rev = {};
+        tiposMel.forEach(tipo => {
+            rev[tipo] = {};
+            tamanhosMel.forEach(tam => {
+                rev[tipo][tam] = Math.max(0, (feiraMel[tipo][tam] || 0) - 1.0);
             });
-            document.getElementById(`tab-${tab}`).classList.remove('hidden');
-            const activeBtn = document.getElementById(`tab-btn-${tab}`);
-            activeBtn.className = "flex-1 py-3 text-center border-b-4 border-emerald-400 text-white flex items-center justify-center gap-2 font-bold";
+        });
+        return rev;
+    }
 
-            if(tab === 'historico') renderHistoryTable();
-        }
+    function gerarPrecosRevendaPolen(feiraPolen) {
+        let rev = {};
+        polenProdutos.forEach(prod => {
+            rev[prod] = Math.max(0, (feiraPolen[prod] || 0) - 1.0);
+        });
+        return rev;
+    }
 
-        // --- GERIR VÁLVULAS ---
-        function renderValveButtons() {
-            const container = document.getElementById('valve-buttons-container');
-            container.innerHTML = '';
-            for(let i=1; i<=10; i++) {
-                const isSelected = i === currentValve;
-                container.innerHTML += `
-                    <button onclick="selectValve(${i})" class="py-3 px-1 rounded-xl font-black text-sm transition-all shadow-sm border ${isSelected ? 'bg-emerald-600 text-white border-emerald-700 shadow-md scale-105' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}">
-                        V${i}
-                    </button>
-                `;
+    function gerarPrecosRevendaOutros(feiraOutros) {
+        let rev = {};
+        outrosProdutos.forEach(prod => {
+            if (prod === 'TopDown') {
+                rev[prod] = 6.0;
+            } else {
+                rev[prod] = Math.max(0, (feiraOutros[prod] || 0) - 1.0);
             }
-        }
+        });
+        return rev;
+    }
 
-        function selectValve(v) {
-            currentValve = v;
-            renderValveButtons();
-            document.getElementById('selected-valve-badge').innerText = `Válvula ${v}`;
-            const np = piquetasConfig[`v${v}`] || 10;
-            document.getElementById('valve-pins-indicator').innerText = `(${np} piquetas)`;
-            updateLiveDrainages();
-        }
+    let precosFeiraMel = JSON.parse(localStorage.getItem('precos_feira_mel_v19') || JSON.stringify(precosFeiraMelPadrao));
+    let precosFeiraPolen = JSON.parse(localStorage.getItem('precos_feira_polen_v19') || JSON.stringify(precosFeiraPolenPadrao));
+    let precosFeiraOutros = JSON.parse(localStorage.getItem('precos_feira_outros_v19') || JSON.stringify(precosFeiraOutrosPadrao));
+    
+    let precosRevendaMel = JSON.parse(localStorage.getItem('precos_revenda_mel_v19') || JSON.stringify(gerarPrecosRevendaMel(precosFeiraMel)));
+    let precosRevendaPolen = JSON.parse(localStorage.getItem('precos_revenda_polen_v19') || JSON.stringify(gerarPrecosRevendaPolen(precosFeiraPolen)));
+    let precosRevendaOutros = JSON.parse(localStorage.getItem('precos_revenda_outros_v19') || JSON.stringify(gerarPrecosRevendaOutros(precosFeiraOutros)));
 
-        // --- CONFIGURAÇÃO DE PIQUETAS ---
-        function loadPiquetasConfig() {
-            const saved = localStorage.getItem('agro_piquetas_cfg');
-            if(saved) {
-                try { piquetasConfig = JSON.parse(saved); } catch(e) { piquetasConfig = {}; }
+    let modoOperacao = localStorage.getItem('dlapmel_modo_operacao') || ''; 
+    let vendas = JSON.parse(localStorage.getItem('vendas_mel_v14') || '[]');
+    let carrinho = [];
+
+    let estadoAtual = {
+        categoria: 'Mel', // 'Mel', 'Pólen', 'Outro'
+        melTipo: 'Multifloral',
+        melTamanho: '1kg',
+        itemNome: null,
+        pagamento: 'Dinheiro'
+    };
+
+    function formatarEuro1Casa(valor) {
+        const r = Math.round((Number(valor) || 0) * 100) / 100;
+        const umaCasa = Math.abs(r * 10 - Math.round(r * 10)) < 1e-9;
+        return (umaCasa ? r.toFixed(1) : r.toFixed(2)).replace('.', ',') + ' €';
+    }
+
+    function obterDataAtualFormatada() {
+        const hoje = new Date();
+        const dia = String(hoje.getDate()).padStart(2, '0');
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        const ano = hoje.getFullYear();
+        return `${dia}/${mes}/${ano}`;
+    }
+
+    function selecionarTipoAtividade(tipo) {
+        modoOperacao = tipo;
+        localStorage.setItem('dlapmel_modo_operacao', modoOperacao);
+        
+        const btnFeira = document.getElementById('btnFeira');
+        const btnRevenda = document.getElementById('btnRevenda');
+
+        btnFeira.className = 'select-type-btn';
+        btnRevenda.className = 'select-type-btn';
+
+        const dataHoje = obterDataAtualFormatada();
+        document.getElementById('dataEvento').value = dataHoje;
+
+        if (tipo === 'Feira') {
+            btnFeira.classList.add('selected-feira');
+            document.getElementById('nomeEvento').value = 'Feira';
+            localStorage.setItem('dlapmel_tipo_feira', '');
+        } else {
+            btnRevenda.classList.add('selected-revenda');
+            document.getElementById('nomeEvento').value = '';
+        }
+        document.getElementById('localEvento').value = '';
+        clienteSelId = ''; gravarClienteSel();
+        atualizarBadgeModo();
+        atualizarUIClientes();
+        reporFatura();
+    }
+
+    function atualizarBadgeModo() {
+        const badge = document.getElementById('badgeModoVenda');
+        if (modoOperacao === 'Revenda') {
+            badge.innerText = 'Modo Ativo: Preços de Revenda (🤝)';
+            badge.className = 'mode-badge mode-revenda';
+        } else {
+            badge.innerText = 'Modo Ativo: Preços de Feira (🎪)';
+            badge.className = 'mode-badge mode-feira';
+        }
+        atualizarPrecoVenda();
+    }
+
+    function limparSelecoesInterface() {
+        document.querySelectorAll('#vendasTab .option-btn').forEach(b => b.classList.remove('active'));
+    }
+
+    function selecionarMel(tipo, elemento) {
+        estadoAtual.categoria = 'Mel';
+        estadoAtual.melTipo = tipo;
+        estadoAtual.itemNome = null;
+
+        limparSelecoesInterface();
+        document.getElementById('tamanhoMelGroup').style.display = 'block';
+
+        elemento.classList.add('active');
+        const botoesTamanho = document.querySelectorAll('#tamanhoMelGroup .option-btn');
+        botoesTamanho.forEach(b => {
+            if (b.innerText === estadoAtual.melTamanho) b.classList.add('active');
+        });
+
+        atualizarPrecoVenda();
+    }
+
+    function selecionarTamanhoMel(tamanho, elemento) {
+        estadoAtual.melTamanho = tamanho;
+        const grupo = elemento.parentElement;
+        for (let b of grupo.getElementsByClassName('option-btn')) { b.classList.remove('active'); }
+        elemento.classList.add('active');
+
+        atualizarPrecoVenda();
+    }
+
+    function selecionarPolen(produto, elemento) {
+        estadoAtual.categoria = 'Pólen';
+        estadoAtual.itemNome = produto;
+
+        limparSelecoesInterface();
+        document.getElementById('tamanhoMelGroup').style.display = 'none';
+        elemento.classList.add('active');
+
+        atualizarPrecoVenda();
+    }
+
+    function selecionarOutroProduto(produto, elemento) {
+        estadoAtual.categoria = 'Outro';
+        estadoAtual.itemNome = produto;
+
+        limparSelecoesInterface();
+        document.getElementById('tamanhoMelGroup').style.display = 'none';
+        elemento.classList.add('active');
+
+        atualizarPrecoVenda();
+    }
+
+    function reporPagamentoDinheiro() {
+        estadoAtual.pagamento = 'Dinheiro';
+        document.getElementById('pagamento').value = 'Dinheiro';
+        document.querySelectorAll('button[onclick^="selecionarOpcaoPagamento"]').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('onclick').indexOf("'Dinheiro'") !== -1);
+        });
+    }
+
+    function selecionarOpcaoPagamento(valor, elemento) {
+        estadoAtual.pagamento = valor;
+        const grupo = elemento.parentElement;
+        for (let b of grupo.getElementsByClassName('option-btn')) { b.classList.remove('active'); }
+        elemento.classList.add('active');
+        document.getElementById('pagamento').value = valor;
+    }
+
+    function atualizarPrecoVenda() {
+        let preco = 0;
+        let pMel = modoOperacao === 'Revenda' ? precosRevendaMel : precosFeiraMel;
+        let pPolen = modoOperacao === 'Revenda' ? precosRevendaPolen : precosFeiraPolen;
+        let pOutros = modoOperacao === 'Revenda' ? precosRevendaOutros : precosFeiraOutros;
+
+        if (estadoAtual.categoria === 'Mel') {
+            if (pMel[estadoAtual.melTipo] && pMel[estadoAtual.melTipo][estadoAtual.melTamanho] !== undefined) {
+                preco = pMel[estadoAtual.melTipo][estadoAtual.melTamanho];
+            } else {
+                preco = 10.0;
             }
-            for(let i=1; i<=10; i++) {
-                if(!piquetasConfig[`v${i}`]) piquetasConfig[`v${i}`] = 10;
-            }
+            document.getElementById('detalheProduto').value = `${estadoAtual.melTipo} - ${estadoAtual.melTamanho}`;
+        } else if (estadoAtual.categoria === 'Pólen') {
+            preco = pPolen[estadoAtual.itemNome] !== undefined ? pPolen[estadoAtual.itemNome] : 0.0;
+            document.getElementById('detalheProduto').value = estadoAtual.itemNome;
+        } else {
+            preco = pOutros[estadoAtual.itemNome] !== undefined ? pOutros[estadoAtual.itemNome] : 0.0;
+            document.getElementById('detalheProduto').value = estadoAtual.itemNome;
         }
+        document.getElementById('precoUnitario').value = preco.toFixed(1);
+    }
 
-        function renderPiquetasConfigUI() {
-            const container = document.getElementById('piquetas-config-container');
-            container.innerHTML = '';
-            for(let i=1; i<=10; i++) {
-                container.innerHTML += `
-                    <div class="flex items-center justify-between bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-                        <span class="font-bold text-sm text-slate-700">Válvula ${i}</span>
-                        <div class="flex items-center gap-2">
-                            <label class="text-xs text-slate-500 font-semibold">Piquetas:</label>
-                            <input type="number" id="cfg-v${i}" value="${piquetasConfig[`v${i}`]}" min="1" class="w-20 text-center font-bold text-base bg-white border border-slate-300 rounded-lg py-1">
+    function alterarValorInput(idInput, delta, minValor) {
+        const input = document.getElementById(idInput);
+        if (input) {
+            let val = parseFloat(input.value) || 0;
+            let novoVal = val + delta;
+            if (novoVal < minValor) novoVal = minValor;
+            input.value = delta % 1 !== 0 ? novoVal.toFixed(1) : novoVal;
+        }
+    }
+
+    function alterarDescontoCarrinho(delta) {
+        const input = document.getElementById('descontoCarrinho');
+        if (input) {
+            let val = parseFloat(input.value) || 0;
+            let novoVal = Math.max(0, val + delta);
+            input.value = novoVal.toFixed(1);
+            renderizarCarrinho();
+        }
+    }
+
+    function renderizarTabelasPrecos() {
+        ['feira', 'revenda'].forEach(modo => {
+            let targetMel = modo === 'feira' ? precosFeiraMel : precosRevendaMel;
+            let tbodyMel = document.getElementById(`tabelaPrecos${modo === 'feira' ? 'Feira' : 'Revenda'}MelBody`);
+            tbodyMel.innerHTML = '';
+            tiposMel.forEach(tipo => {
+                let tr = document.createElement('tr');
+                let html = `<td>${tipo}</td>`;
+                tamanhosMel.forEach(tam => {
+                    let val = (targetMel[tipo] && targetMel[tipo][tam] !== undefined) ? targetMel[tipo][tam] : 0;
+                    html += `<td>
+                        <div class="price-vertical-container">
+                            <input type="number" id="pmel_${modo}_${tipo}_${tam}" class="price-vertical-input" value="${val.toFixed(1)}" step="0.5" min="0">
+                            <div class="price-buttons-row">
+                                <button type="button" class="step-btn-vertical" onclick="alterarPrecoInput('pmel_${modo}_${tipo}_${tam}', -0.5)">-</button>
+                                <button type="button" class="step-btn-vertical" onclick="alterarPrecoInput('pmel_${modo}_${tipo}_${tam}', 0.5)">+</button>
+                            </div>
+                        </div>
+                    </td>`;
+                });
+                tr.innerHTML = html;
+                tbodyMel.appendChild(tr);
+            });
+
+            let targetPolen = modo === 'feira' ? precosFeiraPolen : precosRevendaPolen;
+            let tbodyPolen = document.getElementById(`tabelaPrecos${modo === 'feira' ? 'Feira' : 'Revenda'}PolenBody`);
+            tbodyPolen.innerHTML = '';
+            polenProdutos.forEach(prod => {
+                let val = targetPolen[prod] !== undefined ? targetPolen[prod] : 0;
+                let tr = document.createElement('tr');
+                tr.innerHTML = `<td>${prod}</td><td>
+                    <div class="price-vertical-container" style="max-width: 140px; margin: 0 auto;">
+                        <input type="number" id="ppolen_${modo}_${prod}" class="price-vertical-input" value="${val.toFixed(1)}" step="0.5" min="0">
+                        <div class="price-buttons-row">
+                            <button type="button" class="step-btn-vertical" onclick="alterarPrecoInput('ppolen_${modo}_${prod}', -0.5)">-</button>
+                            <button type="button" class="step-btn-vertical" onclick="alterarPrecoInput('ppolen_${modo}_${prod}', 0.5)">+</button>
                         </div>
                     </div>
-                `;
-            }
-        }
-
-        function savePiquetasConfig() {
-            for(let i=1; i<=10; i++) {
-                const val = parseInt(document.getElementById(`cfg-v${i}`).value) || 10;
-                piquetasConfig[`v${i}`] = val;
-            }
-            localStorage.setItem('agro_piquetas_cfg', JSON.stringify(piquetasConfig));
-            selectValve(currentValve);
-            showToast('Configuração de piquetas guardada!');
-            renderTodayTable();
-        }
-
-        // --- INPUTS E TECLADO TÁTIL ---
-        function setActiveField(fieldName) {
-            activeField = fieldName;
-            fieldsOrder.forEach(f => {
-                const el = document.getElementById(`input-${f}`);
-                if(el) el.classList.remove('field-active');
-            });
-            const activeEl = document.getElementById(`input-${fieldName}`);
-            if(activeEl) activeEl.classList.add('field-active');
-        }
-
-        function keypadInput(digit) {
-            let val = formValues[activeField] || '';
-            if(val.length >= 5) return; // Limite razoável
-            val += digit;
-            formValues[activeField] = val;
-            updateFieldDisplay(activeField);
-            updateLiveDrainages();
-        }
-
-        function keypadBackspace() {
-            let val = formValues[activeField] || '';
-            if(val.length > 0) {
-                val = val.slice(0, -1);
-                formValues[activeField] = val;
-                updateFieldDisplay(activeField);
-                updateLiveDrainages();
-            }
-        }
-
-        function keypadClearField() {
-            formValues[activeField] = '';
-            updateFieldDisplay(activeField);
-            updateLiveDrainages();
-        }
-
-        function updateFieldDisplay(fieldName) {
-            const raw = formValues[fieldName];
-            const el = document.getElementById(`input-${fieldName}`);
-            if(!el) return;
-            if(!raw) {
-                el.value = '';
-                return;
-            }
-            // Decimais implícitos: 7 vira 0.7, 70 vira 7.0
-            const num = parseInt(raw, 10) || 0;
-            el.value = (num / 10).toFixed(1);
-        }
-
-        function nextField() {
-            const idx = fieldsOrder.indexOf(activeField);
-            if(idx < fieldsOrder.length - 1) {
-                setActiveField(fieldsOrder[idx + 1]);
-            } else {
-                setActiveField(fieldsOrder[0]); // Volta ao início
-            }
-        }
-
-        function resetCurrentForm() {
-            fieldsOrder.forEach(f => {
-                formValues[f] = '';
-                updateFieldDisplay(f);
-            });
-            setActiveField(fieldsOrder[0]);
-            updateLiveDrainages();
-        }
-
-        // --- CÁLCULO DE DRENAGEM ---
-        function calculateDrainage(baldeLitrosNum, piqLitrosNum, numPiquetas) {
-            if(!piqLitrosNum || !numPiquetas || piqLitrosNum <= 0 || numPiquetas <= 0 || baldeLitrosNum < 0) return 0;
-            const totalPiq = numPiquetas * piqLitrosNum;
-            if(totalPiq === 0) return 0;
-            return Math.round((baldeLitrosNum / totalPiq) * 100);
-        }
-
-        function updateLiveDrainages() {
-            const np = piquetasConfig[`v${currentValve}`] || 10;
-            
-            const pL = parseFloat(document.getElementById('input-piq_litros').value) || 0;
-            const b1L = parseFloat(document.getElementById('input-b1_litros').value) || 0;
-            const b2L = parseFloat(document.getElementById('input-b2_litros').value) || 0;
-
-            const dr1 = calculateDrainage(b1L, pL, np);
-            const dr2 = calculateDrainage(b2L, pL, np);
-
-            document.getElementById('live-dr1').innerText = `DR1: ${dr1}%`;
-            document.getElementById('live-dr2').innerText = `DR2: ${dr2}%`;
-        }
-
-        // --- GUARDAR E SINCRONIZAR REGISTOS ---
-        function loadRecords() {
-            const saved = localStorage.getItem('agro_records');
-            if(saved) {
-                try { recordsData = JSON.parse(saved); } catch(e) { recordsData = []; }
-            }
-        }
-
-        function saveRecord() {
-            const np = piquetasConfig[`v${currentValve}`] || 10;
-            
-            const pL = parseFloat(document.getElementById('input-piq_litros').value) || 0;
-            const b1L = parseFloat(document.getElementById('input-b1_litros').value) || 0;
-            const b2L = parseFloat(document.getElementById('input-b2_litros').value) || 0;
-
-            const dr1 = calculateDrainage(b1L, pL, np);
-            const dr2 = calculateDrainage(b2L, pL, np);
-
-            const agora = new Date();
-            const dataIso = agora.toISOString().split('T')[0];
-            const horaStr = agora.toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-
-            const record = {
-                id: 'REG-' + Date.now() + '-' + Math.floor(Math.random()*1000),
-                dataIso: dataIso,
-                dataHora: `${dataIso} ${horaStr}`,
-                valvula: currentValve,
-                piquetas: np,
-                piq_litros: pL,
-                piq_ec: parseFloat(document.getElementById('input-piq_ec').value) || 0,
-                piq_ph: parseFloat(document.getElementById('input-piq_ph').value) || 0,
-                b1_litros: b1L,
-                b1_ec: parseFloat(document.getElementById('input-b1_ec').value) || 0,
-                b1_ph: parseFloat(document.getElementById('input-b1_ph').value) || 0,
-                dr1: dr1,
-                b2_litros: b2L,
-                b2_ec: parseFloat(document.getElementById('input-b2_ec').value) || 0,
-                b2_ph: parseFloat(document.getElementById('input-b2_ph').value) || 0,
-                dr2: dr2,
-                sync: false
-            };
-
-            recordsData.push(record);
-            localStorage.setItem('agro_records', JSON.stringify(recordsData));
-
-            resetCurrentForm();
-            renderTodayTable();
-            showToast('Registo guardado com sucesso!');
-            sincronizarComSheets();
-        }
-
-        function renderTodayTable() {
-            const hoje = new Date().toISOString().split('T')[0];
-            const tbody = document.getElementById('today-table-body');
-            const doDia = recordsData.filter(r => r.dataIso === hoje);
-
-            document.getElementById('today-count-badge').innerText = `${doDia.length} registos`;
-
-            if(doDia.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="14" class="text-center py-4 text-slate-400">Nenhum registo efetuado hoje.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = '';
-            doDia.reverse().forEach((r, idx) => {
-                const hora = r.dataHora.split(' ')[1] || '';
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="font-bold">V${r.valvula}</td>
-                        <td>${hora}</td>
-                        <td>${r.piq_litros.toFixed(1)}</td>
-                        <td>${r.piq_ec.toFixed(1)}</td>
-                        <td>${r.piq_ph.toFixed(1)}</td>
-                        <td>${r.b1_litros.toFixed(1)}</td>
-                        <td>${r.b1_ec.toFixed(1)}</td>
-                        <td>${r.b1_ph.toFixed(1)}</td>
-                        <td class="bg-blue-50 font-black text-blue-900">${r.dr1}%</td>
-                        <td>${r.b2_litros.toFixed(1)}</td>
-                        <td>${r.b2_ec.toFixed(1)}</td>
-                        <td>${r.b2_ph.toFixed(1)}</td>
-                        <td class="bg-purple-50 font-black text-purple-900">${r.dr2}%</td>
-                        <td>
-                            <button onclick="deleteRecord('${r.id}')" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function deleteRecord(id) {
-            if(!confirm('Pretende apagar este registo?')) return;
-            recordsData = recordsData.filter(r => r.id !== id);
-            localStorage.setItem('agro_records', JSON.stringify(recordsData));
-            renderTodayTable();
-            showToast('Registo removido.');
-        }
-
-        function renderHistoryTable() {
-            const valvFiltro = document.getElementById('hist-valve').value;
-            const startFiltro = document.getElementById('hist-start').value;
-            const endFiltro = document.getElementById('hist-end').value;
-
-            const tbody = document.getElementById('history-table-body');
-            
-            let filtrados = recordsData.filter(r => {
-                if(valvFiltro !== 'ALL' && String(r.valvula) !== valvFiltro) return false;
-                if(startFiltro && r.dataIso < startFiltro) return false;
-                if(endFiltro && r.dataIso > endFiltro) return false;
-                return true;
+                </td>`;
+                tbodyPolen.appendChild(tr);
             });
 
-            if(filtrados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="14" class="text-center py-4 text-slate-400">Sem registos encontrados para o filtro aplicado.</td></tr>`;
+            let targetOutros = modo === 'feira' ? precosFeiraOutros : precosRevendaOutros;
+            let tbodyOutros = document.getElementById(`tabelaPrecos${modo === 'feira' ? 'Feira' : 'Revenda'}OutrosBody`);
+            tbodyOutros.innerHTML = '';
+            outrosProdutos.forEach(prod => {
+                let val = targetOutros[prod] !== undefined ? targetOutros[prod] : 0;
+                let tr = document.createElement('tr');
+                tr.innerHTML = `<td>${prod}</td><td>
+                    <div class="price-vertical-container" style="max-width: 140px; margin: 0 auto;">
+                        <input type="number" id="poutro_${modo}_${prod}" class="price-vertical-input" value="${val.toFixed(1)}" step="0.5" min="0">
+                        <div class="price-buttons-row">
+                            <button type="button" class="step-btn-vertical" onclick="alterarPrecoInput('poutro_${modo}_${prod}', -0.5)">-</button>
+                            <button type="button" class="step-btn-vertical" onclick="alterarPrecoInput('poutro_${modo}_${prod}', 0.5)">+</button>
+                        </div>
+                    </div>
+                </td>`;
+                tbodyOutros.appendChild(tr);
+            });
+        });
+    }
+
+    function alterarPrecoInput(inputId, delta) {
+        const input = document.getElementById(inputId);
+        if (input) {
+            let val = parseFloat(input.value) || 0;
+            let novo = Math.max(0, val + delta);
+            input.value = novo.toFixed(1);
+        }
+    }
+
+    function guardarPrecos(tipoModo) {
+        let targetMel = tipoModo === 'feira' ? precosFeiraMel : precosRevendaMel;
+        let targetPolen = tipoModo === 'feira' ? precosFeiraPolen : precosRevendaPolen;
+        let targetOutros = tipoModo === 'feira' ? precosFeiraOutros : precosRevendaOutros;
+
+        tiposMel.forEach(tipo => {
+            if (!targetMel[tipo]) targetMel[tipo] = {};
+            tamanhosMel.forEach(tam => {
+                let val = parseFloat(document.getElementById(`pmel_${tipoModo}_${tipo}_${tam}`).value) || 0;
+                targetMel[tipo][tam] = val;
+            });
+        });
+
+        polenProdutos.forEach(prod => {
+            let val = parseFloat(document.getElementById(`ppolen_${tipoModo}_${prod}`).value) || 0;
+            targetPolen[prod] = val;
+        });
+
+        outrosProdutos.forEach(prod => {
+            let val = parseFloat(document.getElementById(`poutro_${tipoModo}_${prod}`).value) || 0;
+            targetOutros[prod] = val;
+        });
+
+        if (tipoModo === 'feira') {
+            localStorage.setItem('precos_feira_mel_v19', JSON.stringify(precosFeiraMel));
+            localStorage.setItem('precos_feira_polen_v19', JSON.stringify(precosFeiraPolen));
+            localStorage.setItem('precos_feira_outros_v19', JSON.stringify(precosFeiraOutros));
+        } else {
+            localStorage.setItem('precos_revenda_mel_v19', JSON.stringify(precosRevendaMel));
+            localStorage.setItem('precos_revenda_polen_v19', JSON.stringify(precosRevendaPolen));
+            localStorage.setItem('precos_revenda_outros_v19', JSON.stringify(precosRevendaOutros));
+        }
+        atualizarPrecoVenda();
+    }
+
+    function guardarDadosEvento() {
+        if (!modoOperacao) {
+            alert('⚠️ Por favor, clique primeiro num dos botões: "Feira" ou "Revenda".');
+            return false;
+        }
+        const campoLocal = document.getElementById('localEvento');
+        campoLocal.value = paraMaiusculas(campoLocal.value.trim());
+        const nome = document.getElementById('nomeEvento').value.trim();
+        const local = campoLocal.value.trim();
+        const data = document.getElementById('dataEvento').value.trim();
+        if (!nome || !local || !data) {
+            alert('⚠️ Por favor, preencha todos os campos (Data, Nome e Local).');
+            return false;
+        }
+        if (modoOperacao === 'Revenda') {
+            let cli = clientePorId(clienteSelId);
+            if (!cli || normalizar(cli.nome) !== normalizar(nome)) {
+                const achado = clientesAtivos().find(c => normalizar(c.nome) === normalizar(nome));
+                if (achado) { escolherCliente(achado.id); cli = achado; }
+            }
+            if (!cli) {
+                acaoPosGuardarCliente = 'avancar';
+                abrirFormCliente(null, nome);
+                return false;
+            }
+        }
+        if (modoOperacao === 'Revenda') {
+            const cliFinal = clientePorId(clienteSelId);
+            if (cliFinal) document.getElementById('nomeEvento').value = cliFinal.nome;
+        }
+        localStorage.setItem('dlapmel_evento_nome', modoOperacao === 'Revenda' ? paraMaiusculas(nome) : nome);
+        localStorage.setItem('dlapmel_evento_local', local);
+        localStorage.setItem('dlapmel_evento_data', data);
+        return true;
+    }
+
+    function avancarParaVendas() {
+        if (guardarDadosEvento()) {
+            mudarAba('vendasTab', document.getElementById('tabBtnVendas'));
+        }
+    }
+
+    function carregarDadosEvento() {
+        let modoSalvo = localStorage.getItem('dlapmel_modo_operacao');
+        if (modoSalvo) {
+            modoOperacao = modoSalvo;
+            if (modoOperacao === 'Feira') {
+                document.getElementById('btnFeira').classList.add('selected-feira');
+            } else if (modoOperacao === 'Revenda') {
+                document.getElementById('btnRevenda').classList.add('selected-revenda');
+            }
+        }
+        const dataHojeTxt = obterDataAtualFormatada();
+        document.getElementById('dataEvento').value = dataHojeTxt;
+        localStorage.setItem('dlapmel_evento_data', dataHojeTxt);
+        document.getElementById('nomeEvento').value = localStorage.getItem('dlapmel_evento_nome') || '';
+        document.getElementById('localEvento').value = paraMaiusculas(localStorage.getItem('dlapmel_evento_local') || '');
+        atualizarBadgeModo();
+        atualizarUIClientes();
+    }
+
+    function mudarAba(abaId, elemento) {
+        if (abaId !== 'inicioTab' && abaId !== 'faturacaoTab') {
+            if (!modoOperacao) {
+                alert('⚠️ Por favor, selecione primeiro Feira ou Revenda na aba Início.');
+                mudarAba('inicioTab', document.getElementById('tabBtnInicio'));
                 return;
             }
+            const nome = document.getElementById('nomeEvento').value.trim();
+            const local = document.getElementById('localEvento').value.trim();
+            const data = document.getElementById('dataEvento').value.trim();
+            if (!nome || !local || !data) {
+                alert('⚠️ Por favor, preencha a Data, Nome e Local na aba Início antes de avançar.');
+                mudarAba('inicioTab', document.getElementById('tabBtnInicio'));
+                return;
+            }
+        }
+        if (abaId === 'vendasTab' && modoOperacao === 'Revenda' && !clientePorId(clienteSelId)) {
+            alert('⚠️ Na Revenda, escolha o cliente da lista (ou crie um novo) na aba Início.');
+            mudarAba('inicioTab', document.getElementById('tabBtnInicio'));
+            return;
+        }
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(tb => tb.classList.remove('active'));
+        document.getElementById(abaId).classList.add('active');
+        if (elemento) elemento.classList.add('active');
+        
+        if (abaId === 'resumoFeiraTab' || abaId === 'resumoRevendaTab') {
+            atualizarResumos();
+        }
+        if (abaId === 'faturacaoTab') renderFaturacao();
+        if (abaId === 'vendasTab') atualizarCamposFatura();
+    }
 
-            tbody.innerHTML = '';
-            filtrados.reverse().forEach(r => {
-                const dataPt = formatDatePt(r.dataIso);
-                const hora = r.dataHora.split(' ')[1] || '';
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="font-semibold">${dataPt}</td>
-                        <td>${hora}</td>
-                        <td class="font-bold">V${r.valvula}</td>
-                        <td>${r.piq_litros.toFixed(1)}</td>
-                        <td>${r.piq_ec.toFixed(1)}</td>
-                        <td>${r.piq_ph.toFixed(1)}</td>
-                        <td>${r.b1_litros.toFixed(1)}</td>
-                        <td>${r.b1_ec.toFixed(1)}</td>
-                        <td>${r.b1_ph.toFixed(1)}</td>
-                        <td class="bg-blue-50 font-black text-blue-900">${r.dr1}%</td>
-                        <td>${r.b2_litros.toFixed(1)}</td>
-                        <td>${r.b2_ec.toFixed(1)}</td>
-                        <td>${r.b2_ph.toFixed(1)}</td>
-                        <td class="bg-purple-50 font-black text-purple-900">${r.dr2}%</td>
-                    </tr>
-                `;
-            });
+    function adicionarAoCarrinho() {
+        const quantidade = parseInt(document.getElementById('quantidade').value) || 1;
+        const precoUnitario = parseFloat(document.getElementById('precoUnitario').value) || 0;
+        const tipoProduto = estadoAtual.categoria;
+        const nomeProduto = document.getElementById('detalheProduto').value;
+        const subtotal = quantidade * precoUnitario;
+
+        carrinho.push({
+            tipoProduto,
+            nomeProduto,
+            melTipo: estadoAtual.categoria === 'Mel' ? estadoAtual.melTipo : null,
+            melTamanho: estadoAtual.categoria === 'Mel' ? estadoAtual.melTamanho : null,
+            quantidade,
+            precoUnitario,
+            subtotal
+        });
+
+        renderizarCarrinho();
+        document.getElementById('quantidade').value = 1;
+    }
+
+    function removerDoCarrinho(index) {
+        carrinho.splice(index, 1);
+        renderizarCarrinho();
+    }
+
+    function renderizarCarrinho() {
+        const cartBody = document.getElementById('cartBody');
+        cartBody.innerHTML = '';
+        let subtotalCarrinho = 0;
+
+        if (carrinho.length === 0) {
+            cartBody.innerHTML = `<tr><td colspan="5" style="color:#777; text-align:center;">Nenhum produto adicionado ainda.</td></tr>`;
+            document.getElementById('cartSubtotal').innerText = '0,0 €';
+            document.getElementById('cartDescontoValor').innerText = '0,0 €';
+            document.getElementById('cartTotal').innerText = '0,0 €';
+            return;
         }
 
-        // --- SINCRONIZAÇÃO COM GOOGLE SHEETS ---
-        async function sincronizarComSheets() {
-            if(!SHEETS_URL || SHEETS_URL.includes('SEU_SCRIPT_ID_AQUI')) {
-                updateSyncBadge('noconfig');
-                return;
-            }
-            if(!navigator.onLine) {
-                updateSyncBadge('offline');
-                return;
-            }
+        carrinho.forEach((item, index) => {
+            subtotalCarrinho += item.subtotal;
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><b>${item.nomeProduto}</b></td>
+                <td>${item.quantidade}</td>
+                <td>${formatarEuro1Casa(item.precoUnitario)}</td>
+                <td><b>${formatarEuro1Casa(item.subtotal)}</b></td>
+                <td><button type="button" class="remove-btn" onclick="removerDoCarrinho(${index})">❌</button></td>
+            `;
+            cartBody.appendChild(tr);
+        });
 
-            const pendentes = recordsData.filter(r => !r.sync);
-            if(pendentes.length === 0) {
-                updateSyncBadge('ok');
-                return;
-            }
+        let desconto = parseFloat(document.getElementById('descontoCarrinho').value) || 0;
+        if (desconto > subtotalCarrinho) desconto = subtotalCarrinho;
 
-            try {
-                updateSyncBadge('enviando', pendentes.length);
-                const res = await fetch(SHEETS_URL, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'text/plain;charset=utf-8'},
-                    body: JSON.stringify(pendentes)
+        let totalFinal = subtotalCarrinho - desconto;
+
+        document.getElementById('cartSubtotal').innerText = formatarEuro1Casa(subtotalCarrinho);
+        document.getElementById('cartDescontoValor').innerText = formatarEuro1Casa(desconto);
+        document.getElementById('cartTotal').innerText = formatarEuro1Casa(totalFinal);
+    }
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    function prefixoIdDeData(d) {
+        return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '-' +
+               pad2(d.getHours()) + pad2(d.getMinutes()) + pad2(d.getSeconds());
+    }
+
+    function lerDataHora(txt) {
+        const m = String(txt || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\D+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+        if (!m) return null;
+        return { d: +m[1], m: +m[2], y: +m[3], hh: +(m[4] || 0), mm: +(m[5] || 0), ss: +(m[6] || 0) };
+    }
+
+    function prefixoIdDeTexto(txt) {
+        const t = lerDataHora(txt);
+        if (!t) return 'SEMDATA-' + Date.now().toString(36);
+        return t.y + pad2(t.m) + pad2(t.d) + '-' + pad2(t.hh) + pad2(t.mm) + pad2(t.ss);
+    }
+
+    function idUnico(prefixo) {
+        let n = 1, id;
+        do { id = prefixo + '-' + pad2(n); n++; } while (vendas.some(v => v.id === id));
+        return id;
+    }
+
+    function momentoDaVenda(v) {
+        const t = lerDataHora(v.dataHora);
+        return t ? new Date(t.y, t.m - 1, t.d, t.hh, t.mm, t.ss).getTime() : 0;
+    }
+
+    function diaDaVenda(v) {
+        const t = lerDataHora(v.dataHora);
+        return t ? t.y + '-' + pad2(t.m) + '-' + pad2(t.d) : '';
+    }
+
+    function diaParaTexto(iso) {
+        const [y, m, d] = iso.split('-');
+        return d + '/' + m + '/' + y;
+    }
+
+    function isoDeData(d) {
+        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+    }
+
+    let filtros = { Feira: { local: '', data: '', cliente: '' }, Revenda: { local: '', data: '', cliente: '' } };
+
+    function normTexto(t) { return normalizar(t); }
+
+    function passaFiltro(v, modo) {
+        const f = filtros[modo];
+        if (f.local && normTexto(v.localEvento) !== normTexto(f.local)) return false;
+        if (f.data && diaDaVenda(v) !== f.data) return false;
+        if (modo === 'Revenda' && f.cliente && chaveCliente(v) !== f.cliente) return false;
+        return true;
+    }
+
+    function nomeLimpoDaVenda(v) { return String(v.nomeEvento || '').replace(/^Revenda\s*-\s*/i, '').trim(); }
+
+    function chaveCliente(v) {
+        if (v.clienteId) return v.clienteId;
+        const nome = nomeLimpoDaVenda(v);
+        const c = clientes.find(x => normalizar(x.nome) === normalizar(nome));
+        return c ? c.id : 'n:' + normalizar(nome);
+    }
+
+    function rotuloCliente(v) {
+        const c = clientes.find(x => x.id === chaveCliente(v));
+        return c ? c.nome : (nomeLimpoDaVenda(v) || 'Sem nome');
+    }
+
+    function popularFiltros() {
+        ['Feira', 'Revenda'].forEach(modo => {
+            const selLocal = document.getElementById('filtroLocal' + modo);
+            const selData = document.getElementById('filtroData' + modo);
+            if (!selLocal || !selData) return;
+            const selCli = modo === 'Revenda' ? document.getElementById('filtroClienteRevenda') : null;
+
+            const doModo = vendas.filter(v => (v.modoOperacao === 'Revenda') === (modo === 'Revenda'));
+            const f = filtros[modo];
+
+            const ok = (v, ignorar) =>
+                (ignorar === 'local' || !f.local || normTexto(v.localEvento) === normTexto(f.local)) &&
+                (ignorar === 'data' || !f.data || diaDaVenda(v) === f.data) &&
+                (ignorar === 'cliente' || !selCli || !f.cliente || chaveCliente(v) === f.cliente);
+
+            function calcular() {
+                const mapaLocais = {};
+                doModo.filter(v => ok(v, 'local')).forEach(v => {
+                    const l = String(v.localEvento || '').trim();
+                    if (l && !mapaLocais[normTexto(l)]) mapaLocais[normTexto(l)] = paraMaiusculas(l);
                 });
-                const txt = await res.text();
-                if(res.ok && txt.trim() === 'ok') {
-                    pendentes.forEach(p => p.sync = true);
-                    localStorage.setItem('agro_records', JSON.stringify(recordsData));
-                    updateSyncBadge('ok');
+                const dias = [...new Set(doModo.filter(v => ok(v, 'data')).map(diaDaVenda).filter(Boolean))].sort().reverse();
+                const mapaClientes = {};
+                if (selCli) doModo.filter(v => ok(v, 'cliente')).forEach(v => {
+                    const k = chaveCliente(v);
+                    if (!mapaClientes[k]) mapaClientes[k] = rotuloCliente(v);
+                });
+                return { mapaLocais, dias, mapaClientes };
+            }
+
+            let r = calcular();
+            if (f.local && !r.mapaLocais[normTexto(f.local)]) { f.local = ''; r = calcular(); }
+            if (f.data && !r.dias.includes(f.data)) { f.data = ''; r = calcular(); }
+            if (selCli && f.cliente && !r.mapaClientes[f.cliente]) { f.cliente = ''; r = calcular(); }
+
+            const locais = Object.values(r.mapaLocais).sort((a, b) => a.localeCompare(b, 'pt'));
+
+            selLocal.innerHTML = '';
+            selLocal.add(new Option('Todos os locais', ''));
+            locais.forEach(l => selLocal.add(new Option(l, l)));
+            selLocal.value = f.local ? (r.mapaLocais[normTexto(f.local)] || '') : '';
+
+            selData.innerHTML = '';
+            selData.add(new Option('Todas as datas', ''));
+            r.dias.forEach(d => selData.add(new Option(diaParaTexto(d), d)));
+            selData.value = f.data;
+
+            if (selCli) {
+                selCli.innerHTML = '';
+                selCli.add(new Option('Todos os clientes', ''));
+                Object.keys(r.mapaClientes)
+                    .sort((a, b) => r.mapaClientes[a].localeCompare(r.mapaClientes[b], 'pt'))
+                    .forEach(k => selCli.add(new Option(r.mapaClientes[k], k)));
+                selCli.value = f.cliente;
+            }
+        });
+    }
+
+    function montarHistorico(modo, html) {
+        const f = filtros[modo];
+        const nomeModo = modo === 'Feira' ? 'feira' : 'revenda';
+        let nota, vazio;
+        if (!f.local && !f.data && !f.cliente) {
+            nota = 'Todas as vendas registadas. Use os filtros para escolher local, dia ou cliente.';
+            vazio = 'Nenhuma venda em ' + nomeModo + ' registada.';
+        } else {
+            nota = 'De acordo com os filtros escolhidos.';
+            vazio = 'Nenhuma venda em ' + nomeModo + ' com estes filtros.';
+        }
+        return '<div style="font-size:11px;color:#888;margin-bottom:4px;">' + nota + '</div>' + (html || vazio);
+    }
+
+    function mudarFiltro(modo, qual) {
+        const f = filtros[modo];
+        f.local = document.getElementById('filtroLocal' + modo).value;
+        f.data = document.getElementById('filtroData' + modo).value;
+        const selCli = modo === 'Revenda' ? document.getElementById('filtroClienteRevenda') : null;
+        f.cliente = selCli ? selCli.value : '';
+        const modoRev = modo === 'Revenda';
+        if (!vendas.some(v => (v.modoOperacao === 'Revenda') === modoRev && passaFiltro(v, modo))) {
+            if (qual !== 'local') f.local = '';
+            if (qual !== 'data') f.data = '';
+            if (qual !== 'cliente') f.cliente = '';
+        }
+        atualizarResumos();
+    }
+
+    function limparFiltros(modo) {
+        filtros[modo] = { local: '', data: '', cliente: '' };
+        atualizarResumos();
+    }
+
+    function registarVendaFinal() {
+        if (carrinho.length === 0) {
+            alert('A lista da pré-venda está vazia! Adicione pelo menos um produto.');
+            return;
+        }
+
+        let subtotalVenda = carrinho.reduce((acc, item) => acc + item.subtotal, 0);
+        let desconto = parseFloat(document.getElementById('descontoCarrinho').value) || 0;
+        if (desconto > subtotalVenda) desconto = subtotalVenda;
+        let totalVendaFinal = subtotalVenda - desconto;
+
+        const faturaVenda = validarFatura();
+        if (!faturaVenda.ok) return;
+
+        let confirmar = confirm(`O valor total desta venda é ${formatarEuro1Casa(totalVendaFinal)}. Deseja registar e concluir a venda?`);
+        if (!confirmar) return;
+
+        const agora = new Date();
+        const dataHora = agora.toLocaleString('pt-PT');
+        const prefixoVenda = prefixoIdDeData(agora);
+        const pagamento = estadoAtual.pagamento;
+        const nomeEvento = modoOperacao === 'Revenda' ? paraMaiusculas(document.getElementById('nomeEvento').value.trim()) : document.getElementById('nomeEvento').value.trim();
+        const localEvento = paraMaiusculas(document.getElementById('localEvento').value.trim());
+        const dataEvento = document.getElementById('dataEvento').value.trim();
+
+        let fatorDesconto = subtotalVenda > 0 ? (totalVendaFinal / subtotalVenda) : 1;
+
+        const clienteVenda = modoOperacao === 'Revenda' ? clientePorId(clienteSelId) : null;
+        const codigoFatura = faturaVenda.dados ? gerarCodigoFatura(modoOperacao === 'Revenda' ? 'Revenda' : 'Feira') : '';
+        const totalCentimos = Math.round(totalVendaFinal * 100);
+        let acumuladoCentimos = 0;
+
+        carrinho.forEach((item, idx) => {
+            const ultimo = idx === carrinho.length - 1;
+            const itemCentimos = ultimo ? (totalCentimos - acumuladoCentimos) : Math.round(item.subtotal * fatorDesconto * 100);
+            acumuladoCentimos += itemCentimos;
+            let totalItemComDesconto = itemCentimos / 100;
+            let descontoItem = Math.round((item.subtotal - totalItemComDesconto) * 100) / 100;
+            vendas.push({
+                id: idUnico(prefixoVenda),
+                dataHora,
+                modoOperacao: modoOperacao || 'Feira',
+                nomeEvento,
+                localEvento,
+                dataEvento,
+                clienteId: clienteVenda ? clienteVenda.id : '',
+                clienteNIF: clienteVenda ? (clienteVenda.nif || '') : '',
+                tipoFeira: modoOperacao === 'Feira' ? tipoFeiraTexto() : '',
+                faturaCodigo: codigoFatura,
+                faturaNome: faturaVenda.dados ? faturaVenda.dados.nome : '',
+                faturaNIF: faturaVenda.dados ? faturaVenda.dados.nif : '',
+                faturaEmitida: false,
+                faturaAnulada: false,
+                faturaEmitidaEm: '',
+                faturaRefObrigatoria: '',
+                faturaSync: true,
+                tipoProduto: item.tipoProduto,
+                nomeProduto: item.nomeProduto,
+                melTipo: item.melTipo,
+                melTamanho: item.melTamanho,
+                quantidade: item.quantidade,
+                precoUnitario: item.precoUnitario,
+                subtotal: item.subtotal,
+                desconto: descontoItem,
+                pagamento,
+                totalVenda: totalItemComDesconto
+            });
+        });
+
+        localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
+        sincronizarVendas();
+        
+        reporPagamentoDinheiro();
+        reporFatura();
+        carrinho = [];
+        document.getElementById('descontoCarrinho').value = "0.0";
+        renderizarCarrinho();
+        atualizarResumos();
+
+        alert('Venda registada com sucesso!' + (codigoFatura ? '\n🧾 Fatura pedida: ' + codigoFatura : ''));
+    }
+
+    let tipoPDFPendente = null;
+
+    function abrirPDF(tipo) {
+        tipoPDFPendente = tipo;
+        const hoje = new Date();
+        const ontem = new Date(); ontem.setDate(ontem.getDate() - 1);
+        document.getElementById('pdfDiaHojeTxt').innerText = diaParaTexto(isoDeData(hoje));
+        document.getElementById('pdfDiaOntemTxt').innerText = diaParaTexto(isoDeData(ontem));
+        document.getElementById('pdfDiaOutro').value = isoDeData(hoje);
+        document.getElementById('pdfDiaModal').style.display = 'flex';
+    }
+
+    function fecharModalPDF() {
+        document.getElementById('pdfDiaModal').style.display = 'none';
+    }
+
+    function escolherDiaPDF(opcao) {
+        let d = new Date();
+        let iso = null;
+        if (opcao === 'hoje') iso = isoDeData(d);
+        else if (opcao === 'ontem') { d.setDate(d.getDate() - 1); iso = isoDeData(d); }
+        else if (opcao === 'outro') {
+            iso = document.getElementById('pdfDiaOutro').value;
+            if (!iso) { alert('Escolha uma data.'); return; }
+        }
+        fecharModalPDF();
+        gerarPDF(tipoPDFPendente, iso);
+    }
+
+    function gerarPDF(tipo, isoDia) {
+        const modo = tipo === 'feira' ? 'Feira' : 'Revenda';
+        const dataAnterior = filtros[modo].data;
+        if (isoDia) filtros[modo].data = isoDia;
+
+        const temVendas = vendas.some(v => ((v.modoOperacao === 'Revenda') === (modo === 'Revenda')) && passaFiltro(v, modo));
+        if (!temVendas) {
+            const f = filtros[modo];
+            filtros[modo].data = dataAnterior;
+            alert('Não há vendas de ' + modo + (f.local ? ' em ' + f.local : '') + (isoDia ? ' no dia ' + diaParaTexto(isoDia) : '') + '.');
+            return;
+        }
+
+        atualizarResumos();
+
+        const elemento = document.getElementById(tipo === 'feira' ? 'conteudoPDF_feira' : 'conteudoPDF_revenda');
+        const nomeEvento = document.getElementById('nomeEvento').value.trim().replace(/[^a-zA-Z0-9]/g, '_') || tipo;
+        const sufixoLocal = filtros[modo].local ? '_' + filtros[modo].local.replace(/[^a-zA-Z0-9]/g, '_') : '';
+        const vCli = filtros[modo].cliente ? vendas.find(v => chaveCliente(v) === filtros[modo].cliente) : null;
+        const sufixoCliente = vCli ? '_' + rotuloCliente(vCli).replace(/[^a-zA-Z0-9]/g, '_') : '';
+        const nomeFicheiro = `Resumo_${tipo.toUpperCase()}_DLAPMEL_${nomeEvento}_${filtros[modo].data || 'todas_as_datas'}${sufixoLocal}${sufixoCliente}.pdf`;
+
+        const opcoes = {
+            margin:       10,
+            filename:     nomeFicheiro,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        const repor = function() { filtros[modo].data = dataAnterior; atualizarResumos(); };
+
+        html2pdf().set(opcoes).from(elemento).outputPdf('bloburl').then(function(pdfUrl) {
+            repor();
+            window.open(pdfUrl, '_blank');
+        }).catch(function() {
+            repor();
+            alert('Não foi possível gerar o PDF.');
+        });
+    }
+
+    function atualizarResumos() {
+        popularFiltros();
+        const nomeEv = document.getElementById('nomeEvento').value || '-';
+        const localEv = document.getElementById('localEvento').value || '-';
+        const dataEv = document.getElementById('dataEvento').value || '-';
+        
+        document.getElementById('resumoFeiraNome').innerHTML = '<b>Evento:</b> ' + nomeEv;
+        document.getElementById('resumoFeiraLocal').innerHTML = '<b>Local:</b> ' + localEv;
+        document.getElementById('resumoFeiraData').innerHTML = '<b>Data:</b> ' + dataEv;
+
+        document.getElementById('resumoRevendaNome').innerHTML = '<b>Cliente:</b> ' + nomeEv;
+        document.getElementById('resumoRevendaLocal').innerHTML = '<b>Local:</b> ' + localEv;
+        document.getElementById('resumoRevendaData').innerHTML = '<b>Data:</b> ' + dataEv;
+
+        let faturacaoFeira = 0, descontoFeira = 0;
+        let faturacaoRevenda = 0, descontoRevenda = 0;
+
+        let matrizMelFeira = {};
+        let matrizMelRevenda = {};
+        tiposMel.forEach(tipo => {
+            matrizMelFeira[tipo] = { '1kg': 0, '500g': 0, '250g': 0 };
+            matrizMelRevenda[tipo] = { '1kg': 0, '500g': 0, '250g': 0 };
+        });
+
+        let polenFeira = {}, polenRevenda = {};
+        polenProdutos.forEach(p => {
+            polenFeira[p] = { qtd: 0, total: 0 };
+            polenRevenda[p] = { qtd: 0, total: 0 };
+        });
+
+        let outrosFeira = {}, outrosRevenda = {};
+        outrosProdutos.forEach(p => {
+            outrosFeira[p] = { qtd: 0, total: 0 };
+            outrosRevenda[p] = { qtd: 0, total: 0 };
+        });
+
+        let pagFeira = { 'Dinheiro': 0, 'MB Way': 0, 'Cartão': 0, 'Transferência': 0 };
+        let pagRevenda = { 'Dinheiro': 0, 'MB Way': 0, 'Cartão': 0, 'Transferência': 0 };
+
+        const histFeira = [];
+        const histRevenda = [];
+
+        const meta = { Feira: { n: 0, eventos: new Set(), locais: new Set(), dias: new Set() }, Revenda: { n: 0, eventos: new Set(), locais: new Set(), dias: new Set() } };
+
+        vendas.forEach((v) => {
+            let isRevenda = v.modoOperacao === 'Revenda';
+            const modoV = isRevenda ? 'Revenda' : 'Feira';
+            if (!passaFiltro(v, modoV)) return;
+            meta[modoV].n++;
+            if (v.nomeEvento) meta[modoV].eventos.add(v.nomeEvento);
+            if (v.localEvento) meta[modoV].locais.add(paraMaiusculas(v.localEvento));
+            if (diaDaVenda(v)) meta[modoV].dias.add(diaDaVenda(v));
+            let desc = v.tipoProduto === 'Mel' ? `${v.melTipo} (${v.melTamanho})` : v.nomeProduto;
+            let infoDesc = v.desconto > 0 ? ` <small style="color:#bc6c25;">(Desc: ${formatarEuro1Casa(v.desconto)})</small>` : '';
+            let infoLocal = v.localEvento ? ` | 📍 ${paraMaiusculas(v.localEvento)}` : '';
+            let refInfo = v.faturaRefObrigatoria ? ` | 📌 [${escaparHtml(v.faturaRefObrigatoria)}]` : '';
+            let itemHtml = `<div class="history-item"><b>${v.dataHora}</b> - ${v.quantidade}x ${desc} | ${formatarEuro1Casa(v.totalVenda)}${infoDesc} (${v.pagamento})${infoLocal}${v.faturaCodigo ? ' | 🧾 ' + escaparHtml(v.faturaCodigo) + (v.faturaAnulada ? ' (anulada)' : '') + refInfo : ''}</div>`;
+
+            if (isRevenda) {
+                faturacaoRevenda += v.totalVenda;
+                descontoRevenda += (v.desconto || 0);
+                const nomeP = v.nomeProduto || 'Sem nome';
+                if (v.tipoProduto === 'Mel' && matrizMelRevenda[v.melTipo] && matrizMelRevenda[v.melTipo][v.melTamanho] !== undefined) {
+                    matrizMelRevenda[v.melTipo][v.melTamanho] += v.quantidade;
+                } else if (v.tipoProduto === 'Mel') {
+                    const nomeM = 'Mel (' + (v.melTipo || '?') + ' ' + (v.melTamanho || '?') + ')';
+                    if (!outrosRevenda[nomeM]) outrosRevenda[nomeM] = { qtd: 0, total: 0 };
+                    outrosRevenda[nomeM].qtd += v.quantidade;
+                    outrosRevenda[nomeM].total += v.totalVenda;
+                } else if (v.tipoProduto === 'Pólen' || polenProdutos.includes(nomeP) || /^pólen/i.test(nomeP)) {
+                    if (!polenRevenda[nomeP]) polenRevenda[nomeP] = { qtd: 0, total: 0 };
+                    polenRevenda[nomeP].qtd += v.quantidade;
+                    polenRevenda[nomeP].total += v.totalVenda;
                 } else {
-                    throw new Error(txt);
+                    if (!outrosRevenda[nomeP]) outrosRevenda[nomeP] = { qtd: 0, total: 0 };
+                    outrosRevenda[nomeP].qtd += v.quantidade;
+                    outrosRevenda[nomeP].total += v.totalVenda;
                 }
-            } catch(e) {
-                updateSyncBadge('erro', pendentes.length);
-            }
-        }
-
-        function updateSyncBadge(estado, qtd=0) {
-            const badge = document.getElementById('sync-status-badge');
-            if(!badge) return;
-            if(estado === 'ok') {
-                badge.className = 'text-xs bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-inner';
-                badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up text-emerald-300"></i> Sincronizado ✔';
-            } else if(estado === 'enviando') {
-                badge.className = 'text-xs bg-amber-600 text-white font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-inner animate-pulse';
-                badge.innerHTML = `<i class="fa-solid fa-arrows-rotate animate-spin"></i> A enviar ${qtd}...`;
-            } else if(estado === 'offline') {
-                badge.className = 'text-xs bg-slate-600 text-slate-200 font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-inner';
-                badge.innerHTML = '<i class="fa-solid fa-wifi-slash"></i> Offline (Guardado local)';
-            } else if(estado === 'noconfig') {
-                badge.className = 'text-xs bg-slate-700 text-slate-200 font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-inner';
-                badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Sheets por configurar';
+                if (pagRevenda[v.pagamento] !== undefined) pagRevenda[v.pagamento] += v.totalVenda;
+                histRevenda.push({ ts: momentoDaVenda(v), idx: histRevenda.length, html: itemHtml });
             } else {
-                badge.className = 'text-xs bg-red-600 text-white font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-inner';
-                badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${qtd} por sincronizar`;
+                faturacaoFeira += v.totalVenda;
+                descontoFeira += (v.desconto || 0);
+                const nomeP = v.nomeProduto || 'Sem nome';
+                if (v.tipoProduto === 'Mel' && matrizMelFeira[v.melTipo] && matrizMelFeira[v.melTipo][v.melTamanho] !== undefined) {
+                    matrizMelFeira[v.melTipo][v.melTamanho] += v.quantidade;
+                } else if (v.tipoProduto === 'Mel') {
+                    const nomeM = 'Mel (' + (v.melTipo || '?') + ' ' + (v.melTamanho || '?') + ')';
+                    if (!outrosFeira[nomeM]) outrosFeira[nomeM] = { qtd: 0, total: 0 };
+                    outrosFeira[nomeM].qtd += v.quantidade;
+                    outrosFeira[nomeM].total += v.totalVenda;
+                } else if (v.tipoProduto === 'Pólen' || polenProdutos.includes(nomeP) || /^pólen/i.test(nomeP)) {
+                    if (!polenFeira[nomeP]) polenFeira[nomeP] = { qtd: 0, total: 0 };
+                    polenFeira[nomeP].qtd += v.quantidade;
+                    polenFeira[nomeP].total += v.totalVenda;
+                } else {
+                    if (!outrosFeira[nomeP]) outrosFeira[nomeP] = { qtd: 0, total: 0 };
+                    outrosFeira[nomeP].qtd += v.quantidade;
+                    outrosFeira[nomeP].total += v.totalVenda;
+                }
+                if (pagFeira[v.pagamento] !== undefined) pagFeira[v.pagamento] += v.totalVenda;
+                histFeira.push({ ts: momentoDaVenda(v), idx: histFeira.length, html: itemHtml });
+            }
+        });
+
+        ['Feira', 'Revenda'].forEach(modo => {
+            const f = filtros[modo];
+            const m = meta[modo];
+            if (!f.local && !f.data && !f.cliente && m.n === 0) return;
+            const dias = [...m.dias].sort();
+            const textoDias = dias.length === 0 ? '-' : (dias.length === 1 ? diaParaTexto(dias[0]) : diaParaTexto(dias[0]) + ' a ' + diaParaTexto(dias[dias.length - 1]));
+            document.getElementById('resumo' + modo + 'Nome').innerHTML = '<b>' + (modo === 'Feira' ? 'Evento' : 'Cliente') + ':</b> ' + ([...m.eventos].join(', ') || '-');
+            document.getElementById('resumo' + modo + 'Local').innerHTML = '<b>Local:</b> ' + ([...m.locais].join(', ') || '-');
+            document.getElementById('resumo' + modo + 'Data').innerHTML = '<b>Data:</b> ' + textoDias;
+        });
+
+        ['Feira', 'Revenda'].forEach(modo => {
+            let targetMatriz = modo === 'Feira' ? matrizMelFeira : matrizMelRevenda;
+            let tbody = document.getElementById(`matrixResumo${modo}Body`);
+            tbody.innerHTML = '';
+            tiposMel.forEach(tipo => {
+                let tr = document.createElement('tr');
+                let html = `<td><b>${tipo}</b></td>`;
+                tamanhosMel.forEach(tam => {
+                    let q = targetMatriz[tipo][tam];
+                    html += `<td>${q > 0 ? '<b>' + q + '</b>' : '-'}</td>`;
+                });
+                tr.innerHTML = html;
+                tbody.appendChild(tr);
+            });
+        });
+
+        const polenFeiraBody = document.getElementById('polenResumoFeiraBody');
+        polenFeiraBody.innerHTML = '';
+        let temFeiraPolen = false;
+        for (let p in polenFeira) {
+            if (polenFeira[p].qtd > 0) {
+                temFeiraPolen = true;
+                polenFeiraBody.innerHTML += `<tr><td><b>${p}</b></td><td><b>${polenFeira[p].qtd}</b></td><td><b>${formatarEuro1Casa(polenFeira[p].total)}</b></td></tr>`;
             }
         }
+        if (!temFeiraPolen) polenFeiraBody.innerHTML = `<tr><td colspan="3" style="color:#777; text-align:center;">Nenhum pólen em feira.</td></tr>`;
 
-        window.addEventListener('online', sincronizarComSheets);
+        const polenRevendaBody = document.getElementById('polenResumoRevendaBody');
+        polenRevendaBody.innerHTML = '';
+        let temRevendaPolen = false;
+        for (let p in polenRevenda) {
+            if (polenRevenda[p].qtd > 0) {
+                temRevendaPolen = true;
+                polenRevendaBody.innerHTML += `<tr><td><b>${p}</b></td><td><b>${polenRevenda[p].qtd}</b></td><td><b>${formatarEuro1Casa(polenRevenda[p].total)}</b></td></tr>`;
+            }
+        }
+        if (!temRevendaPolen) polenRevendaBody.innerHTML = `<tr><td colspan="3" style="color:#777; text-align:center;">Nenhum pólen em revenda.</td></tr>`;
 
-        // --- UTILITÁRIOS ---
-        function formatDatePt(iso) {
-            if(!iso) return '';
-            const p = iso.split('-');
-            if(p.length !== 3) return iso;
-            return `${p[2]}/${p[1]}/${p[0]}`;
+        const outrosFeiraBody = document.getElementById('outrosResumoFeiraBody');
+        outrosFeiraBody.innerHTML = '';
+        let temFeiraOutros = false;
+        for (let p in outrosFeira) {
+            if (outrosFeira[p].qtd > 0) {
+                temFeiraOutros = true;
+                outrosFeiraBody.innerHTML += `<tr><td><b>${p}</b></td><td><b>${outrosFeira[p].qtd}</b></td><td><b>${formatarEuro1Casa(outrosFeira[p].total)}</b></td></tr>`;
+            }
+        }
+        if (!temFeiraOutros) outrosFeiraBody.innerHTML = `<tr><td colspan="3" style="color:#777; text-align:center;">Nenhum outro produto em feira.</td></tr>`;
+
+        const outrosRevendaBody = document.getElementById('outrosResumoRevendaBody');
+        outrosRevendaBody.innerHTML = '';
+        let temRevendaOutros = false;
+        for (let p in outrosRevenda) {
+            if (outrosRevenda[p].qtd > 0) {
+                temRevendaOutros = true;
+                outrosRevendaBody.innerHTML += `<tr><td><b>${p}</b></td><td><b>${outrosRevenda[p].qtd}</b></td><td><b>${formatarEuro1Casa(outrosRevenda[p].total)}</b></td></tr>`;
+            }
+        }
+        if (!temRevendaOutros) outrosRevendaBody.innerHTML = `<tr><td colspan="3" style="color:#777; text-align:center;">Nenhum outro produto em revenda.</td></tr>`;
+
+        document.getElementById('pag_Feira_Dinheiro').innerText = formatarEuro1Casa(pagFeira['Dinheiro']);
+        document.getElementById('pag_Feira_MBWay').innerText = formatarEuro1Casa(pagFeira['MB Way']);
+        document.getElementById('pag_Feira_Cartao').innerText = formatarEuro1Casa(pagFeira['Cartão']);
+        document.getElementById('pag_Feira_Transferencia').innerText = formatarEuro1Casa(pagFeira['Transferência']);
+
+        document.getElementById('pag_Revenda_Dinheiro').innerText = formatarEuro1Casa(pagRevenda['Dinheiro']);
+        document.getElementById('pag_Revenda_MBWay').innerText = formatarEuro1Casa(pagRevenda['MB Way']);
+        document.getElementById('pag_Revenda_Cartao').innerText = formatarEuro1Casa(pagRevenda['Cartão']);
+        document.getElementById('pag_Revenda_Transferencia').innerText = formatarEuro1Casa(pagRevenda['Transferência']);
+
+        document.getElementById('totalFaturadoFeira').innerText = formatarEuro1Casa(faturacaoFeira);
+        document.getElementById('totalDescontosFeira').innerText = formatarEuro1Casa(descontoFeira);
+        const ordenarHistorico = lista => lista.sort((a, b) => b.ts - a.ts || a.idx - b.idx).map(x => x.html).join('');
+        document.getElementById('historicoVendasFeira').innerHTML = montarHistorico('Feira', ordenarHistorico(histFeira));
+
+        document.getElementById('totalFaturadoRevenda').innerText = formatarEuro1Casa(faturacaoRevenda);
+        document.getElementById('totalDescontosRevenda').innerText = formatarEuro1Casa(descontoRevenda);
+        document.getElementById('historicoVendasRevenda').innerHTML = montarHistorico('Revenda', ordenarHistorico(histRevenda));
+    }
+
+    const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyGvG8r3DG9kpZiiLcyNe16pRkARSM-09Rk3ruTUu9B1472rWs904CJtOQNwYG5bwQy/exec';
+
+    function mostrarEstadoSync(msg) {
+        const el = document.getElementById('syncEstado');
+        if (el) el.innerText = msg;
+    }
+
+    async function sincronizarVendas() {
+        if (!SHEETS_URL) { mostrarEstadoSync('Folha não configurada'); return; }
+        const pendentes = vendas.filter(v => !v.sync);
+        if (pendentes.length === 0) { mostrarEstadoSync('Tudo sincronizado ✔'); return; }
+        if (!navigator.onLine) { mostrarEstadoSync(pendentes.length + ' por enviar (sem rede)'); return; }
+
+        pendentes.forEach(v => {
+            if (!v.id) v.id = idUnico(prefixoIdDeTexto(v.dataHora));
+        });
+        localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
+
+        const payload = pendentes.map(v => Object.assign({}, v, {
+            evento: v.nomeEvento || '',
+            local: v.localEvento || '',
+            dataEvento: v.dataEvento || '',
+            faturaEmitida: v.faturaEmitida ? 'SIM' : '',
+            faturaAnulada: v.faturaAnulada ? 'SIM' : '',
+            faturaRefObrigatoria: v.faturaRefObrigatoria || ''
+        }));
+
+        try {
+            mostrarEstadoSync('A enviar ' + pendentes.length + '...');
+            const res = await fetch(SHEETS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+            const txt = await res.text();
+            if (!res.ok || txt.trim() !== 'ok') throw new Error(txt);
+            pendentes.forEach(v => { v.sync = true; v.faturaSync = true; });
+            localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
+            mostrarEstadoSync('Tudo sincronizado ✔');
+        } catch (e) {
+            let det = (e && e.message) ? e.message.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120) : 'desconhecido';
+            mostrarEstadoSync(pendentes.length + ' por enviar (erro: ' + det + ')');
+        }
+    }
+    window.addEventListener('online', sincronizarVendas);
+    window.addEventListener('online', function () { sincronizarFaturas(); });
+
+    async function atualizarDaFolha() {
+        if (!SHEETS_URL) { alert('A folha ainda não está configurada (SHEETS_URL).'); return; }
+        if (!navigator.onLine) { alert('Sem ligação à internet.'); return; }
+        await trazerClientesDaFolha();
+        await sincronizarClientes();
+        await sincronizarVendas();
+        await sincronizarFaturas();
+        try {
+            const res = await fetch(SHEETS_URL + '?acao=vendas');
+            const dados = await res.json();
+            if (!dados || !dados.ok) throw new Error((dados && dados.erro) || 'resposta inválida');
+
+            const ids = new Set(vendas.map(v => v.id).filter(Boolean));
+            let novas = 0;
+            let atualizadas = 0;
+            const porId = new Map(vendas.map(v => [v.id, v]));
+            dados.vendas.forEach(r => {
+                if (r.id && ids.has(r.id)) {
+                    const l = porId.get(r.id);
+                    const remoto = String(r.faturaEmitidaEm || '');
+                    if (l && l.faturaCodigo && remoto > String(l.faturaEmitidaEm || '')) {
+                        l.faturaEmitida = String(r.faturaEmitida).toUpperCase() === 'SIM';
+                        l.faturaAnulada = String(r.faturaAnulada).toUpperCase() === 'SIM';
+                        l.faturaRefObrigatoria = String(r.faturaRefObrigatoria || '');
+                        l.faturaEmitidaEm = remoto;
+                        l.faturaSync = true;
+                        atualizadas++;
+                    }
+                    return;
+                }
+                if (!r.id) return;
+                vendas.push({
+                    id: r.id,
+                    dataHora: String(r.dataHora || ''),
+                    modoOperacao: r.modoOperacao || 'Feira',
+                    nomeEvento: r.evento || '',
+                    localEvento: r.local || '',
+                    dataEvento: String(r.dataEvento || ''),
+                    clienteId: String(r.clienteId || ''),
+                    clienteNIF: String(r.clienteNIF || ''),
+                    tipoFeira: String(r.tipoFeira || ''),
+                    faturaCodigo: String(r.faturaCodigo || ''),
+                    faturaNome: String(r.faturaNome || ''),
+                    faturaNIF: String(r.faturaNIF || ''),
+                    faturaEmitida: String(r.faturaEmitida).toUpperCase() === 'SIM',
+                    faturaAnulada: String(r.faturaAnulada).toUpperCase() === 'SIM',
+                    faturaEmitidaEm: String(r.faturaEmitidaEm || ''),
+                    faturaRefObrigatoria: String(r.faturaRefObrigatoria || ''),
+                    faturaSync: true,
+                    tipoProduto: r.tipoProduto || '',
+                    nomeProduto: r.nomeProduto || '',
+                    melTipo: r.melTipo || '',
+                    melTamanho: r.melTamanho || '',
+                    quantidade: Number(r.quantidade) || 0,
+                    precoUnitario: Number(r.precoUnitario) || 0,
+                    subtotal: Number(r.subtotal) || 0,
+                    desconto: Number(r.desconto) || 0,
+                    pagamento: r.pagamento || '',
+                    totalVenda: Number(r.totalVenda) || 0,
+                    sync: true
+                });
+                ids.add(r.id);
+                novas++;
+            });
+
+            if (novas > 0 || atualizadas > 0) {
+                const chave = v => { const t = lerDataHora(v.dataHora); return t ? new Date(t.y, t.m - 1, t.d, t.hh, t.mm, t.ss).getTime() : 0; };
+                vendas.sort((a, b) => chave(a) - chave(b));
+                localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
+                atualizarResumos();
+            }
+            alert((novas > 0 || atualizadas > 0) ? 'Atualizado: ' + novas + ' linha(s) de venda nova(s) e ' + atualizadas + ' fatura(s) com estado atualizado.' : 'Já está tudo atualizado.');
+        } catch (e) {
+            alert('Não foi possível ler a folha (' + ((e && e.message) || 'erro') + '). Confirme que atualizou o script e criou uma nova versão da implementação.');
+        }
+    }
+
+    let clientes = JSON.parse(localStorage.getItem('dlapmel_clientes_v1') || '[]');
+    let clienteSelId = localStorage.getItem('dlapmel_cliente_sel') || '';
+    let acaoPosGuardarCliente = null;
+
+    function gravarClientes() { localStorage.setItem('dlapmel_clientes_v1', JSON.stringify(clientes)); }
+    function gravarClienteSel() { localStorage.setItem('dlapmel_cliente_sel', clienteSelId || ''); }
+
+    function normalizar(t) {
+        return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    }
+    function escaparHtml(t) {
+        return String(t == null ? '' : t).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    }
+    function paraMaiusculas(t) {
+        return String(t == null ? '' : t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleUpperCase('pt-PT');
+    }
+
+    function limparCampo(el) {
+        const ini = el.selectionStart, fim = el.selectionEnd;
+        const novo = paraMaiusculas(el.value);
+        if (novo !== el.value) {
+            el.value = novo;
+            try { el.setSelectionRange(ini, fim); } catch (e) {}
+        }
+    }
+
+    function maiusculasClientes() {
+        let n = 0;
+        clientes.forEach(c => {
+            const nome = paraMaiusculas(c.nome), morada = paraMaiusculas(c.morada), localidade = paraMaiusculas(c.localidade);
+            if (nome !== c.nome || morada !== c.morada || localidade !== c.localidade) {
+                c.nome = nome; c.morada = morada; c.localidade = localidade;
+                c.atualizadoEm = new Date().toISOString(); c.sync = false;
+                n++;
+            }
+        });
+        if (n) gravarClientes();
+        return n;
+    }
+
+    function clientesAtivos() { return clientes.filter(c => !c.removido); }
+    function clientePorId(id) { return id ? (clientes.find(c => c.id === id && !c.removido) || null) : null; }
+
+    function nifValido(nif) {
+        if (!/^\d{9}$/.test(nif)) return false;
+        if (!/^(1|2|3|45|5|6|70|71|72|74|75|77|78|79|8|90|91|98|99)/.test(nif)) return false;
+        let soma = 0;
+        for (let i = 0; i < 8; i++) soma += Number(nif[i]) * (9 - i);
+        let controlo = 11 - (soma % 11);
+        if (controlo >= 10) controlo = 0;
+        return controlo === Number(nif[8]);
+    }
+
+    function formatarCP(el) {
+        let v = el.value.replace(/\D/g, '').slice(0, 7);
+        if (v.length > 4) v = v.slice(0, 4) + '-' + v.slice(4);
+        el.value = v;
+    }
+
+    function gerarIdCliente() {
+        const base = 'CL-' + prefixoIdDeData(new Date());
+        let id = base, n = 2;
+        while (clientes.some(c => c.id === id)) { id = base + '-' + pad2(n); n++; }
+        return id;
+    }
+
+    function aoEscreverNome() {
+        if (modoOperacao !== 'Revenda') { esconderSugestoes(); return; }
+        const texto = document.getElementById('nomeEvento').value;
+        const sel = clientePorId(clienteSelId);
+        if (sel && normalizar(sel.nome) !== normalizar(texto)) {
+            clienteSelId = ''; gravarClienteSel(); atualizarCartaoCliente();
+        }
+        mostrarSugestoes(texto);
+    }
+
+    function mostrarSugestoes(texto) {
+        const caixa = document.getElementById('sugestoesClientes');
+        const q = normalizar(texto);
+        let lista = clientesAtivos().filter(c => !q || normalizar(c.nome).includes(q) || String(c.nif || '').includes(q));
+        lista.sort((a, b) => {
+            const pa = normalizar(a.nome).startsWith(q) ? 0 : 1, pb = normalizar(b.nome).startsWith(q) ? 0 : 1;
+            return pa - pb || a.nome.localeCompare(b.nome, 'pt');
+        });
+        lista = lista.slice(0, 8);
+
+        let html = lista.map(c => {
+            const det = [c.nif ? 'NIF ' + c.nif : '', c.localidade].filter(Boolean).join(' · ');
+            return '<div class="sug-item" onclick="escolherCliente(\'' + escaparHtml(c.id) + '\')"><b>' + escaparHtml(c.nome) + '</b>' + (det ? '<br><small>' + escaparHtml(det) + '</small>' : '') + '</div>';
+        }).join('');
+
+        const existeExato = clientesAtivos().some(c => normalizar(c.nome) === q);
+        if (q && !existeExato) {
+            html += '<div class="sug-item sug-novo" onclick="novoClienteDaPesquisa()">➕ Criar novo cliente “' + escaparHtml(texto.trim()) + '”</div>';
+        } else if (!q && lista.length === 0) {
+            html = '<div class="sug-item sug-novo" onclick="novoClienteDaPesquisa()">➕ Ainda não há clientes. Criar o primeiro</div>';
+        }
+        caixa.innerHTML = html;
+        caixa.style.display = html ? 'block' : 'none';
+    }
+
+    function esconderSugestoes() {
+        const caixa = document.getElementById('sugestoesClientes');
+        if (caixa) caixa.style.display = 'none';
+    }
+
+    function novoClienteDaPesquisa() {
+        esconderSugestoes();
+        abrirFormCliente(null, document.getElementById('nomeEvento').value);
+    }
+
+    function escolherCliente(id) {
+        const c = clientePorId(id);
+        if (!c) return;
+        clienteSelId = c.id; gravarClienteSel();
+        document.getElementById('nomeEvento').value = c.nome;
+        if (c.localidade) document.getElementById('localEvento').value = c.localidade;
+        esconderSugestoes();
+        atualizarCartaoCliente();
+    }
+
+    function atualizarCartaoCliente() {
+        const cartao = document.getElementById('clienteCard');
+        const barra = document.getElementById('clienteBarra');
+        if (!cartao || !barra) return;
+        const revenda = modoOperacao === 'Revenda';
+        barra.style.display = revenda ? 'flex' : 'none';
+        const c = revenda ? clientePorId(clienteSelId) : null;
+        if (!c) { cartao.style.display = 'none'; cartao.innerHTML = ''; return; }
+        const morada = [c.morada, [c.codigoPostal, c.localidade].filter(Boolean).join(' '), c.pais].filter(Boolean).join(', ');
+        const linhas = [c.nif ? 'NIF ' + c.nif : 'Sem NIF', morada, [c.telefone, c.email].filter(Boolean).join(' · ')].filter(Boolean);
+        cartao.innerHTML = '<b>✔ ' + escaparHtml(c.nome) + '</b><br>' + linhas.map(escaparHtml).join('<br>') +
+            '<div style="margin-top:6px;"><button type="button" class="cli-mini-btn" onclick="abrirFormCliente(\'' + escaparHtml(c.id) + '\', \'\')">✏️ Editar cliente</button></div>';
+        cartao.style.display = 'block';
+    }
+
+    function tipoFeiraTexto() {
+        const sel = document.getElementById('tipoFeira');
+        return sel ? String(sel.value || '').trim().replace(/\s+/g, ' ') : '';
+    }
+
+    function mudarTipoFeira() {
+        if (modoOperacao !== 'Feira') return;
+        localStorage.setItem('dlapmel_tipo_feira', document.getElementById('tipoFeira').value);
+    }
+
+    function atualizarUIClientes() {
+        const revenda = modoOperacao === 'Revenda';
+        const label = document.getElementById('labelNomeEvento');
+        const campo = document.getElementById('nomeEvento');
+        if (label) label.innerText = revenda ? 'Cliente (escreva para pesquisar):' : (modoOperacao === 'Feira' ? 'Evento (tipo opcional só para registo):' : 'Nome do Evento / Cliente:');
+        if (campo && modoOperacao) campo.placeholder = revenda ? 'Escreva o nome do cliente...' : 'Nome do evento...';
+        if (campo) campo.style.textTransform = revenda ? 'uppercase' : '';
+        const feira = modoOperacao === 'Feira';
+        const selTipo = document.getElementById('tipoFeira');
+        if (selTipo) {
+            selTipo.style.display = feira ? 'block' : 'none';
+            if (feira) selTipo.value = localStorage.getItem('dlapmel_tipo_feira') || '';
+        }
+        if (campo) {
+            campo.readOnly = feira;
+            if (feira) campo.value = 'Feira';
+        }
+        const sel = clientePorId(clienteSelId);
+        if (clienteSelId && (!sel || !campo || normalizar(sel.nome) !== normalizar(campo.value))) {
+            clienteSelId = ''; gravarClienteSel();
+        } else if (sel && campo) {
+            campo.value = sel.nome;
+        }
+        if (!revenda) esconderSugestoes();
+        atualizarCartaoCliente();
+    }
+
+    function abrirFormCliente(id, nomePre) {
+        const c = id ? clientes.find(x => x.id === id) : null;
+        const def = (k, v) => { document.getElementById(k).value = v || ''; };
+        def('cfId', c ? c.id : '');
+        def('cfNome', c ? c.nome : paraMaiusculas(String(nomePre || '').replace(/^Revenda\s*-\s*/i, '').trim()));
+        def('cfNif', c ? c.nif : '');
+        def('cfMorada', c ? paraMaiusculas(c.morada) : '');
+        def('cfCP', c ? c.codigoPostal : '');
+        def('cfLocalidade', c ? paraMaiusculas(c.localidade) : '');
+        def('cfPais', c ? (c.pais || 'Portugal') : 'Portugal');
+        def('cfTelefone', c ? c.telefone : '');
+        def('cfEmail', c ? c.email : '');
+        document.getElementById('cfTitulo').innerText = c ? 'Editar cliente' : 'Novo cliente';
+        document.getElementById('cfApagar').style.display = c ? 'block' : 'none';
+        document.getElementById('cfAviso').style.display = (!c && acaoPosGuardarCliente) ? 'block' : 'none';
+        document.getElementById('cfErro').innerText = '';
+        document.getElementById('clienteFormModal').style.display = 'flex';
+    }
+
+    function fecharFormCliente() {
+        acaoPosGuardarCliente = null;
+        document.getElementById('clienteFormModal').style.display = 'none';
+    }
+
+    function guardarFormCliente() {
+        const g = id => document.getElementById(id).value.trim();
+        const erro = msg => { document.getElementById('cfErro').innerText = msg; };
+        const id = g('cfId');
+        const nome = paraMaiusculas(g('cfNome').replace(/\s+/g, ' '));
+        const nif = g('cfNif').replace(/\s/g, '');
+        const cp = g('cfCP');
+        const email = g('cfEmail');
+
+        if (!nome) return erro('Escreva o nome do cliente.');
+        if (nif && !nifValido(nif)) return erro('NIF inválido. Confirme os 9 dígitos.');
+        if (cp && !/^\d{4}-\d{3}$/.test(cp)) return erro('Código postal inválido (formato 0000-000).');
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return erro('Email inválido.');
+
+        const outros = clientesAtivos().filter(c => c.id !== id);
+        const igualNif = nif && outros.find(c => c.nif === nif);
+        if (igualNif) return erro('Já existe um cliente com este NIF: ' + igualNif.nome + '.');
+        if (outros.find(c => normalizar(c.nome) === normalizar(nome))) return erro('Já existe um cliente com este nome.');
+
+        const dados = {
+            nome, nif, morada: paraMaiusculas(g('cfMorada')), codigoPostal: cp, localidade: paraMaiusculas(g('cfLocalidade')),
+            pais: g('cfPais') || 'Portugal', telefone: g('cfTelefone'), email,
+            atualizadoEm: new Date().toISOString(), removido: false, sync: false
+        };
+        let c = id ? clientes.find(x => x.id === id) : null;
+        if (c) Object.assign(c, dados);
+        else { c = Object.assign({ id: gerarIdCliente() }, dados); clientes.push(c); }
+        gravarClientes();
+
+        const seguir = acaoPosGuardarCliente;
+        acaoPosGuardarCliente = null;
+        document.getElementById('clienteFormModal').style.display = 'none';
+
+        if (!id || id === clienteSelId) escolherCliente(c.id); else atualizarCartaoCliente();
+        renderListaClientes();
+        sincronizarClientes();
+        atualizarCamposFatura();
+        if (seguir === 'avancar') avancarParaVendas();
+    }
+
+    function apagarClienteForm() {
+        const id = document.getElementById('cfId').value;
+        const c = clientes.find(x => x.id === id);
+        if (!c) return;
+        if (!confirm('Apagar o cliente "' + c.nome + '" da lista? As vendas já registadas não são alteradas.')) return;
+        c.removido = true; c.atualizadoEm = new Date().toISOString(); c.sync = false;
+        gravarClientes();
+        if (clienteSelId === id) { clienteSelId = ''; gravarClienteSel(); }
+        fecharFormCliente();
+        atualizarCartaoCliente();
+        renderListaClientes();
+        sincronizarClientes();
+    }
+
+    function abrirListaClientes() {
+        document.getElementById('clListaBusca').value = '';
+        renderListaClientes();
+        document.getElementById('clienteListaModal').style.display = 'flex';
+    }
+    function fecharListaClientes() { document.getElementById('clienteListaModal').style.display = 'none'; }
+
+    function renderListaClientes() {
+        const corpo = document.getElementById('clListaCorpo');
+        const busca = document.getElementById('clListaBusca');
+        if (!corpo) return;
+        const q = normalizar(busca ? busca.value : '');
+        const lista = clientesAtivos()
+            .filter(c => !q || normalizar(c.nome).includes(q) || String(c.nif || '').includes(q))
+            .sort((a, b) => a.nome.localeCompare(b.nome, 'pt'));
+        if (lista.length === 0) {
+            corpo.innerHTML = '<p style="color:#777;font-size:13px;text-align:center;">Nenhum cliente encontrado.</p>';
+            return;
+        }
+        corpo.innerHTML = lista.map(c => {
+            const det = [c.nif ? 'NIF ' + c.nif : 'Sem NIF', c.localidade].filter(Boolean).join(' · ');
+            const id = escaparHtml(c.id);
+            return '<div class="cli-row"><div class="cli-info"><b>' + escaparHtml(c.nome) + '</b><br><small>' + escaparHtml(det) + '</small></div>' +
+                '<button type="button" class="cli-mini-btn" onclick="usarClienteDaLista(\'' + id + '\')">Usar</button>' +
+                '<button type="button" class="cli-mini-btn" onclick="abrirFormCliente(\'' + id + '\', \'\')">✏️</button></div>';
+        }).join('');
+    }
+
+    function usarClienteDaLista(id) {
+        escolherCliente(id);
+        fecharListaClientes();
+    }
+
+    async function sincronizarClientes() {
+        if (!SHEETS_URL || !navigator.onLine) return;
+        const pendentes = clientes.filter(c => !c.sync);
+        if (pendentes.length === 0) return;
+        try {
+            const payload = pendentes.map(c => { const o = Object.assign({}, c); delete o.sync; return o; });
+            const res = await fetch(SHEETS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ tipo: 'clientes', clientes: payload })
+            });
+            const txt = await res.text();
+            if (!res.ok || txt.trim() !== 'ok') throw new Error(txt);
+            pendentes.forEach(c => c.sync = true);
+            gravarClientes();
+        } catch (e) {}
+    }
+
+    async function trazerClientesDaFolha() {
+        if (!SHEETS_URL || !navigator.onLine) return 0;
+        try {
+            const res = await fetch(SHEETS_URL + '?acao=clientes');
+            const dados = await res.json();
+            if (!dados || !dados.ok) return 0;
+            let alterados = 0;
+            dados.clientes.forEach(r => {
+                const id = String(r.id || '').replace(/[^A-Za-z0-9_-]/g, '');
+                if (!id) return;
+                const novo = {
+                    id, nome: String(r.nome || ''), nif: String(r.nif || ''), morada: String(r.morada || ''),
+                    codigoPostal: String(r.codigoPostal || ''), localidade: String(r.localidade || ''),
+                    pais: String(r.pais || 'Portugal'), telefone: String(r.telefone || ''), email: String(r.email || ''),
+                    atualizadoEm: String(r.atualizadoEm || ''), removido: String(r.removido).toLowerCase() === 'true', sync: true
+                };
+                if (!novo.nome) return;
+                const local = clientes.find(c => c.id === id);
+                if (!local) { clientes.push(novo); alterados++; }
+                else if (novo.atualizadoEm > String(local.atualizadoEm || '')) { Object.assign(local, novo); alterados++; }
+            });
+            const mudouMaiusculas = maiusculasClientes();
+            if (alterados || mudouMaiusculas) { gravarClientes(); atualizarUIClientes(); }
+            return alterados;
+        } catch (e) { return 0; }
+    }
+
+    document.addEventListener('click', function (e) {
+        const caixa = document.getElementById('clienteBox');
+        if (caixa && !caixa.contains(e.target)) esconderSugestoes();
+    });
+
+    let faturaEscolha = 'Não';
+    let filtroFat = { estado: 'pendente', tipo: '', data: '' };
+
+    function escolherFatura(v) {
+        faturaEscolha = v;
+        document.getElementById('btnFaturaSim').classList.toggle('active', v === 'Sim');
+        document.getElementById('btnFaturaNao').classList.toggle('active', v === 'Não');
+        atualizarCamposFatura();
+    }
+
+    function atualizarCamposFatura() {
+        const campos = document.getElementById('faturaFeiraCampos');
+        const info = document.getElementById('faturaRevendaInfo');
+        if (!campos || !info) return;
+        const sim = faturaEscolha === 'Sim';
+        const revenda = modoOperacao === 'Revenda';
+        campos.style.display = (sim && !revenda) ? 'block' : 'none';
+        if (sim && revenda) {
+            const c = clientePorId(clienteSelId);
+            let html;
+            if (!c) html = 'Cliente não escolhido.';
+            else if (c.nif && nifValido(c.nif)) html = '<b>' + escaparHtml(c.nome) + '</b><br>NIF ' + escaparHtml(c.nif) + ' (dados da ficha do cliente)';
+            else html = '<b>' + escaparHtml(c.nome) + '</b><br><span style="color:#c1121f;font-weight:bold;">Sem NIF válido na ficha.</span> <button type="button" class="cli-mini-btn" onclick="abrirFormCliente(\'' + escaparHtml(c.id) + '\', \'\')">✏️ Editar cliente</button>';
+            info.innerHTML = html;
+            info.style.display = 'block';
+        } else {
+            info.innerHTML = '';
+            info.style.display = 'none';
+        }
+    }
+
+    function reporFatura() {
+        faturaEscolha = 'Não';
+        document.getElementById('btnFaturaSim').classList.remove('active');
+        document.getElementById('btnFaturaNao').classList.add('active');
+        document.getElementById('faturaNome').value = '';
+        document.getElementById('faturaNIF').value = '';
+        atualizarCamposFatura();
+    }
+
+    function gerarCodigoFatura(modo) {
+        const prefixo = modo === 'Revenda' ? 'FREVENDA' : 'FFEIRA';
+        let max = 0;
+        vendas.forEach(v => {
+            const cod = String(v.faturaCodigo || '');
+            if (cod.indexOf(prefixo + ' ') === 0) {
+                const n = parseInt(cod.slice(prefixo.length + 1), 10);
+                if (n > max) max = n;
+            }
+        });
+        return prefixo + ' ' + String(max + 1).padStart(3, '0');
+    }
+
+    function validarFatura() {
+        if (faturaEscolha !== 'Sim') return { ok: true, dados: null };
+
+        if (modoOperacao === 'Revenda') {
+            const c = clientePorId(clienteSelId);
+            if (!c) { alert('Escolha o cliente na aba Início.'); return { ok: false }; }
+            if (!c.nif || !nifValido(c.nif)) {
+                alert('O cliente "' + c.nome + '" não tem um NIF válido na ficha. Edite o cliente antes de pedir fatura.');
+                atualizarCamposFatura();
+                return { ok: false };
+            }
+            return { ok: true, dados: { nome: c.nome, nif: c.nif } };
         }
 
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = msg;
-            toast.classList.remove('translate-y-28', 'opacity-0');
-            setTimeout(() => {
-                toast.classList.add('translate-y-28', 'opacity-0');
-            }, 3000);
+        const nome = paraMaiusculas(document.getElementById('faturaNome').value.trim().replace(/\s+/g, ' '));
+        const nif = document.getElementById('faturaNIF').value.replace(/\s/g, '');
+        if (!nome) { alert('Para a fatura, escreva o nome do cliente.'); return { ok: false }; }
+        if (!nifValido(nif)) { alert('NIF inválido. Confirme os 9 dígitos.'); return { ok: false }; }
+        document.getElementById('faturaNome').value = nome;
+        return { ok: true, dados: { nome, nif } };
+    }
+
+    function descricaoLinha(l) {
+        return l.tipoProduto === 'Mel' ? (l.melTipo + ' (' + l.melTamanho + ')') : (l.nomeProduto || 'Sem nome');
+    }
+
+    function agruparFaturas() {
+        const mapa = {};
+        vendas.forEach(v => {
+            if (!v.faturaCodigo) return;
+            if (!mapa[v.faturaCodigo]) mapa[v.faturaCodigo] = [];
+            mapa[v.faturaCodigo].push(v);
+        });
+        return Object.keys(mapa).map(codigo => {
+            const linhas = mapa[codigo];
+            const p = linhas[0];
+            return {
+                codigo, linhas,
+                modo: p.modoOperacao === 'Revenda' ? 'Revenda' : 'Feira',
+                dia: diaDaVenda(p),
+                local: paraMaiusculas(p.localEvento || ''),
+                nome: p.faturaNome || '', nif: p.faturaNIF || '',
+                pagamento: p.pagamento || '',
+                total: linhas.reduce((a, l) => a + (Number(l.totalVenda) || 0), 0),
+                emitida: linhas.every(l => l.faturaEmitida && !l.faturaAnulada),
+                anulada: linhas.every(l => l.faturaAnulada),
+                emitidaEm: linhas.reduce((m, l) => (l.faturaEmitidaEm && l.faturaEmitidaEm > m) ? l.faturaEmitidaEm : m, ''),
+                ts: momentoDaVenda(p)
+            };
+        });
+    }
+
+    function mudarFiltroFat() {
+        filtroFat.estado = document.getElementById('fatEstado').value;
+        filtroFat.tipo = document.getElementById('fatTipo').value;
+        filtroFat.data = document.getElementById('fatData').value;
+        renderFaturacao();
+    }
+
+    function renderFaturacao() {
+        const lista = document.getElementById('faturacaoLista');
+        if (!lista) return;
+        const grupos = agruparFaturas();
+        const estadoG = g => g.anulada ? 'anulada' : (g.emitida ? 'feita' : 'pendente');
+        const pend = grupos.filter(g => estadoG(g) === 'pendente');
+        const feitas = grupos.filter(g => estadoG(g) === 'feita');
+        const anuladas = grupos.filter(g => estadoG(g) === 'anulada');
+        document.getElementById('faturacaoResumo').innerHTML =
+            '⏳ Por faturar: <b>' + pend.length + '</b> (' + formatarEuro1Casa(pend.reduce((a, g) => a + g.total, 0)) + ')' +
+            ' &nbsp;|&nbsp; ✔ Faturadas: <b>' + feitas.length + '</b>' +
+            ' &nbsp;|&nbsp; 🚫 Anuladas: <b>' + anuladas.length + '</b>';
+
+        const dias = [...new Set(grupos.map(g => g.dia).filter(Boolean))].sort().reverse();
+        if (filtroFat.data && !dias.includes(filtroFat.data)) filtroFat.data = '';
+        const selData = document.getElementById('fatData');
+        selData.innerHTML = '';
+        selData.add(new Option('Todas as datas', ''));
+        dias.forEach(d => selData.add(new Option(diaParaTexto(d), d)));
+        selData.value = filtroFat.data;
+        document.getElementById('fatEstado').value = filtroFat.estado;
+        document.getElementById('fatTipo').value = filtroFat.tipo;
+
+        const visiveis = grupos.filter(g =>
+            (filtroFat.estado === 'todas' || estadoG(g) === filtroFat.estado) &&
+            (!filtroFat.tipo || g.modo === filtroFat.tipo) &&
+            (!filtroFat.data || g.dia === filtroFat.data)
+        ).sort((a, b) => b.ts - a.ts || b.codigo.localeCompare(a.codigo));
+
+        if (visiveis.length === 0) {
+            lista.innerHTML = '<p style="color:#777;font-size:13px;text-align:center;">Nenhuma fatura ' +
+                (filtroFat.estado === 'pendente' ? 'por fazer' : (filtroFat.estado === 'feita' ? 'já feita' : (filtroFat.estado === 'anulada' ? 'anulada' : ''))) + ' com estes filtros.</p>';
+            return;
         }
-    </script>
+        lista.innerHTML = visiveis.map(cartaoFatura).join('');
+    }
+
+    function cartaoFatura(g) {
+        const cod = escaparHtml(g.codigo);
+        const itens = g.linhas.map(l => escaparHtml(l.quantidade + 'x ' + descricaoLinha(l)) + ' — ' + formatarEuro1Casa(Number(l.totalVenda) || 0)).join('<br>');
+        let quando = '';
+        
+        let refPreenchidaTexto = g.linhas[0].faturaRefObrigatoria ? ` | 📌 <b>Ref:</b> ${escaparHtml(g.linhas[0].faturaRefObrigatoria)}` : '';
+
+        if (g.emitida && g.emitidaEm) {
+            const d = new Date(g.emitidaEm);
+            if (!isNaN(d)) quando = ' em ' + pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+        }
+        
+        let acao;
+        if (g.anulada) {
+            acao = '<button type="button" class="cli-mini-btn" onclick="anularFatura(\'' + cod + '\', false)">↩ Repor</button>';
+        } else if (g.emitida) {
+            acao = '<button type="button" class="cli-mini-btn" onclick="marcarFaturadaComCampoObrigatorio(\'' + cod + '\', true)">✏️ Editar Campo / Desfazer</button>';
+        } else {
+            acao = '<button type="button" class="cli-mini-btn" style="background:#386641;color:#fff;border-color:#386641;" onclick="marcarFaturadaComCampoObrigatorio(\'' + cod + '\', true)">☑ Marcar como Faturada</button>' +
+                   '<button type="button" class="cli-mini-btn" style="background:#fff;color:#c1121f;border-color:#c1121f;" onclick="anularFatura(\'' + cod + '\', true)">🚫 Anular</button>';
+        }
+
+        return '<div class="fat-card' + (g.anulada ? ' anulada' : (g.emitida ? ' feita' : '')) + '">' +
+            '<div class="fat-top"><span class="fat-cod">' + cod + '</span><span class="fat-badge">' + (g.anulada ? '🚫 Anulada' : (g.emitida ? '✔ Faturada' + escaparHtml(quando) : '⏳ Por faturar')) + '</span></div>' +
+            '<div class="fat-linha">📅 <b>' + (g.dia ? diaParaTexto(g.dia) : '-') + '</b> &nbsp;📍 ' + escaparHtml(g.local || '-') + ' &nbsp;(' + g.modo + ')</div>' +
+            '<div class="fat-linha">👤 <b>' + escaparHtml(g.nome) + '</b> &nbsp;NIF <b>' + escaparHtml(g.nif) + '</b>' + refPreenchidaTexto + '</div>' +
+            '<div class="fat-itens">' + itens + '</div>' +
+            '<div class="fat-linha">Total: <b>' + formatarEuro1Casa(g.total) + '</b> (' + escaparHtml(g.pagamento) + ')</div>' +
+            '<div class="fat-acoes">' + acao +
+            '<button type="button" class="cli-mini-btn" onclick="copiarFatura(\'' + cod + '\', \'nif\')">📋 NIF</button>' +
+            '<button type="button" class="cli-mini-btn" onclick="copiarFatura(\'' + cod + '\', \'nome\')">📋 Nome</button></div>' +
+            '</div>';
+    }
+
+    function marcarFaturadaComCampoObrigatorio(codigo, estado) {
+        if (estado) {
+            let valorAtual = '';
+            let vendaExemplo = vendas.find(v => v.faturaCodigo === codigo);
+            if (vendaExemplo && vendaExemplo.faturaRefObrigatoria) {
+                valorAtual = vendaExemplo.faturaRefObrigatoria;
+            }
+
+            let refPreenchida = prompt(`🧾 Indique a Referência ou Nº de Fatura para concluir ${codigo}:`, valorAtual);
+            
+            if (refPreenchida === null) {
+                return; // Cancelado
+            }
+            
+            if (!refPreenchida.trim()) {
+                alert('⚠️ O preenchimento deste campo é obrigatório para finalizar a fatura!');
+                return;
+            }
+
+            const agora = new Date().toISOString();
+            vendas.forEach(v => {
+                if (v.faturaCodigo === codigo) {
+                    v.faturaEmitida = true;
+                    v.faturaAnulada = false;
+                    v.faturaEmitidaEm = agora;
+                    v.faturaRefObrigatoria = refPreenchida.trim();
+                    v.faturaSync = false;
+                }
+            });
+            alert(`✔ Fatura ${codigo} finalizada com sucesso!`);
+        } else {
+            if (!confirm(`Desfazer a marca de faturada em ${codigo}?`)) return;
+            vendas.forEach(v => {
+                if (v.faturaCodigo === codigo) {
+                    v.faturaEmitida = false;
+                    v.faturaAnulada = false;
+                    v.faturaEmitidaEm = '';
+                    v.faturaSync = false;
+                }
+            });
+        }
+
+        localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
+        renderFaturacao();
+        sincronizarFaturas();
+    }
+
+    function anularFatura(codigo, anular) {
+        if (anular && !confirm('Anular o pedido de fatura ' + codigo + '? A venda mantém-se, mas deixa de aparecer em "Por faturar".')) return;
+        const agora = new Date().toISOString();
+        vendas.forEach(v => {
+            if (v.faturaCodigo === codigo) { v.faturaAnulada = anular; v.faturaEmitida = false; v.faturaEmitidaEm = agora; v.faturaSync = false; }
+        });
+        localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
+        renderFaturacao();
+        sincronizarFaturas();
+    }
+
+    function copiarFatura(codigo, campo) {
+        const l = vendas.find(v => v.faturaCodigo === codigo);
+        if (!l) return;
+        const txt = String(campo === 'nif' ? l.faturaNIF : l.faturaNome) || '';
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(txt).catch(() => copiarTextoAlternativo(txt));
+        } else {
+            copiarTextoAlternativo(txt);
+        }
+    }
+
+    function copiarTextoAlternativo(txt) {
+        const ta = document.createElement('textarea');
+        ta.value = txt;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta);
+    }
+
+    async function sincronizarFaturas() {
+        if (!SHEETS_URL || !navigator.onLine) return;
+        const pendentes = vendas.filter(v => v.faturaCodigo && v.sync && v.faturaSync === false);
+        if (pendentes.length === 0) return;
+        try {
+            const linhas = pendentes.map(v => ({ id: v.id, faturaEmitida: v.faturaEmitida ? 'SIM' : '', faturaEmitidaEm: v.faturaEmitidaEm || '', faturaAnulada: v.faturaAnulada ? 'SIM' : '', faturaRefObrigatoria: v.faturaRefObrigatoria || '' }));
+            const res = await fetch(SHEETS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ tipo: 'faturas', linhas })
+            });
+            const txt = await res.text();
+            if (!res.ok || txt.trim() !== 'ok') throw new Error(txt);
+            pendentes.forEach(v => v.faturaSync = true);
+            localStorage.setItem('vendas_mel_v14', JSON.stringify(vendas));
+        } catch (e) {}
+    }
+
+    window.onload = function() {
+        maiusculasClientes();
+        carregarDadosEvento();
+        renderizarTabelasPrecos();
+        sincronizarVendas();
+        trazerClientesDaFolha().then(sincronizarClientes);
+        sincronizarFaturas();
+    };
+</script>
+
 </body>
 </html>
